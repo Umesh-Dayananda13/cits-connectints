@@ -1,0 +1,17 @@
+<svg width="760" height="180" viewBox="0 0 760 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gold" x1="28" y1="20" x2="160" y2="152" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FDE68A"/>
+      <stop offset="1" stop-color="#D97706"/>
+    </linearGradient>
+  </defs>
+  <rect x="10" y="10" width="160" height="160" rx="34" fill="#020617"/>
+  <rect x="20" y="20" width="140" height="140" rx="30" stroke="url(#gold)" stroke-width="6"/>
+  <path d="M52 68H128V84H70V93H120V108H70V117H128V132H52V68Z" fill="url(#gold)"/>
+  <circle cx="110" cy="50" r="6" fill="#FDE68A"/>
+
+  <text x="196" y="86" fill="#0F172A" font-family="Poppins, Segoe UI, sans-serif" font-size="62" font-weight="800">CITS</text>
+  <text x="198" y="122" fill="#475569" font-family="Poppins, Segoe UI, sans-serif" font-size="24" font-weight="500">
+    More than teaching skills, we build futures
+  </text>
+</svg>

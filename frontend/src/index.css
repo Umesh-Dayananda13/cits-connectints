@@ -1,0 +1,139 @@
+@import "tailwindcss";
+
+:root {
+  font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: radial-gradient(circle at top, #0f172a 0%, #020617 60%);
+}
+
+@keyframes fadeInPage {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes loaderPulse {
+  0%, 100% {
+    transform: scaleY(0.35);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shimmerText {
+  0% {
+    opacity: 0.35;
+    letter-spacing: 0.08em;
+  }
+  100% {
+    opacity: 1;
+    letter-spacing: 0.12em;
+  }
+}
+
+.page-enter {
+  animation: fadeInPage 0.55s ease-out both;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  will-change: transform, opacity;
+}
+
+.reveal.is-visible {
+  animation: slideUp 0.65s ease-out forwards;
+}
+
+.delay-1 { animation-delay: 0.08s; }
+.delay-2 { animation-delay: 0.16s; }
+.delay-3 { animation-delay: 0.24s; }
+.delay-4 { animation-delay: 0.32s; }
+.delay-5 { animation-delay: 0.40s; }
+.delay-6 { animation-delay: 0.48s; }
+
+.loader-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 16px;
+  background: radial-gradient(circle at top, #1e293b 0%, #020617 65%);
+  color: #e2e8f0;
+}
+
+.loader-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 50px;
+}
+
+.loader-bars span {
+  width: 7px;
+  height: 40px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #67e8f9 0%, #0ea5e9 100%);
+  transform-origin: bottom;
+  animation: loaderPulse 1s ease-in-out infinite;
+}
+
+.loader-bars span:nth-child(2) { animation-delay: 0.1s; }
+.loader-bars span:nth-child(3) { animation-delay: 0.2s; }
+.loader-bars span:nth-child(4) { animation-delay: 0.3s; }
+.loader-bars span:nth-child(5) { animation-delay: 0.4s; }
+
+.loader-bars::before,
+.loader-bars::after {
+  content: "";
+  width: 2px;
+  height: 40px;
+  background: rgba(103, 232, 249, 0.25);
+}
+
+.loader-text {
+  margin: 0;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 12px;
+  color: #67e8f9;
+  animation: shimmerText 0.9s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter,
+  .reveal,
+  .loader-bars span,
+  .loader-text {
+    animation: none !important;
+  }
+
+  .reveal {
+    opacity: 1;
+  }
+}
