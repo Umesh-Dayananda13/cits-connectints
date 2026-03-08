@@ -2,6 +2,17 @@ import { useEffect, useState } from 'react'
 import './index.css'
 
 const courses = [
+  {
+    fee: '69999',
+    title: 'Oracle EBS by CITS',
+    image: '/images/oracle.jpeg',
+    tagline: 'Learn. Practice. Get Placed.',
+  },
+  {
+    fee: '1999',
+    title: 'Versant Mock Test Practice by CITS',
+    image: '/images/versant.png',
+  },
   { fee: '34999', title: 'ServiceNow by CITS', image: '/images/service-now.png' },
   { fee: '34999', title: 'Incident Management', image: '/images/incident-management.png' },
 ]
@@ -21,6 +32,8 @@ const courseIncludes = [
 ]
 
 const upcomingBatches = [
+  { track: 'Oracle EBS by CITS', mode: 'Online Live', duration: '12 Weeks' },
+  { track: 'Versant Mock Test Practice by CITS', mode: 'Online Live', duration: '4 Weeks' },
   { track: 'ServiceNow by CITS', mode: 'Online Live', duration: '12 Weeks' },
   { track: 'Incident Management', mode: 'Online Live', duration: '10 Weeks' },
 ]
@@ -56,10 +69,20 @@ const navItems = [
 ]
 
 const whatsappNumber = '916303545755'
+const searchTargets = [
+  { id: 'courses', label: 'Courses', keywords: ['course', 'servicenow', 'oracle', 'versant', 'incident'] },
+  { id: 'about-us', label: 'About Us', keywords: ['about', 'cits', 'story', 'mission'] },
+  { id: 'leadership', label: 'Founder & Co-Founder', keywords: ['founder', 'cofounder', 'leadership', 'tharun', 'surya'] },
+  { id: 'upcoming-batches', label: 'Upcoming Batches', keywords: ['batch', 'upcoming', 'enrollment'] },
+  { id: 'verify-certificate', label: 'Verify Your Certificate', keywords: ['verify', 'certificate', 'validation'] },
+  { id: 'blogs', label: 'Blogs', keywords: ['blog', 'insights', 'career'] },
+]
 
 function App() {
   const [isLoading, setIsLoading] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchFeedback, setSearchFeedback] = useState('')
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 1100)
@@ -71,6 +94,12 @@ function App() {
 
     const nodes = document.querySelectorAll('[data-reveal]')
     if (!nodes.length) return
+
+    nodes.forEach((node, index) => {
+      const translateX = index % 2 === 0 ? '-20px' : '20px'
+      node.style.setProperty('--reveal-translate-x', translateX)
+      node.style.setProperty('--reveal-delay', `${Math.min(index * 60, 360)}ms`)
+    })
 
     if (!('IntersectionObserver' in window)) {
       nodes.forEach((node) => node.classList.add('is-visible'))
@@ -86,7 +115,7 @@ function App() {
           }
         })
       },
-      { threshold: 0.16, rootMargin: '0px 0px -40px 0px' },
+      { threshold: 0.08, rootMargin: '0px 0px -12% 0px' },
     )
 
     nodes.forEach((node) => observer.observe(node))
@@ -99,6 +128,28 @@ function App() {
     return () => {
       clearTimeout(visibilityFallback)
       observer.disconnect()
+    }
+  }, [isLoading])
+
+  useEffect(() => {
+    if (isLoading) return
+
+    const sectionNodes = Array.from(document.querySelectorAll('main > section'))
+    const cleanupHandlers = []
+    const accentPalette = ['56 189 248', '34 197 94', '245 158 11', '244 114 182', '168 85 247', '14 165 233']
+
+    sectionNodes.forEach((node, index) => {
+      node.classList.add('highlightable-section')
+      node.setAttribute('tabindex', '0')
+      node.style.setProperty('--section-accent-rgb', accentPalette[index % accentPalette.length])
+
+      const focusSection = () => node.focus()
+      node.addEventListener('click', focusSection)
+      cleanupHandlers.push(() => node.removeEventListener('click', focusSection))
+    })
+
+    return () => {
+      cleanupHandlers.forEach((cleanup) => cleanup())
     }
   }, [isLoading])
 
@@ -117,73 +168,145 @@ function App() {
     )
   }
 
+  const handleSearch = (event) => {
+    event.preventDefault()
+    const query = searchQuery.trim().toLowerCase()
+
+    if (!query) {
+      setSearchFeedback('Enter a keyword to search.')
+      return
+    }
+
+    const matchedTarget = searchTargets.find((target) =>
+      target.label.toLowerCase().includes(query) ||
+      target.keywords.some((keyword) => keyword.includes(query)),
+    )
+
+    if (!matchedTarget) {
+      setSearchFeedback(`No section found for "${searchQuery}".`)
+      return
+    }
+
+    const sectionNode = document.getElementById(matchedTarget.id)
+    if (!sectionNode) {
+      setSearchFeedback('Section exists in menu but not found on page.')
+      return
+    }
+
+    sectionNode.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    sectionNode.focus()
+    setSearchFeedback(`Showing: ${matchedTarget.label}`)
+    setMobileMenuOpen(false)
+  }
+
   return (
     <div className="page-enter min-h-screen bg-slate-950 text-slate-100">
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
         <header
           data-reveal
-          className="reveal delay-1 overflow-hidden rounded-3xl border border-slate-700/60 bg-slate-100 text-slate-900 shadow-xl"
+          className="reveal delay-1 sticky top-3 z-40 overflow-hidden rounded-2xl border border-cyan-300/20 bg-slate-950/75 text-slate-100 shadow-2xl shadow-cyan-950/30 backdrop-blur-xl"
         >
-          <nav className="flex flex-wrap items-center gap-3 px-4 py-4 sm:gap-4 sm:px-6">
-            <img
-              src="/images/logo-style-4.svg"
-              alt="CITS logo with slogan"
-              className="h-12 w-auto max-w-[220px] object-contain sm:h-14 sm:max-w-[320px]"
-            />
+          <nav className="flex flex-wrap items-center gap-3 px-4 py-4 sm:gap-4 sm:px-5">
+            <a
+              href="#about-us"
+              className="premium-logo-shell rounded-xl border border-slate-200/70 bg-slate-50/95 p-2 shadow-md shadow-slate-950/30"
+            >
+              <img
+                src="/images/logo-style-4.svg"
+                alt="CITS logo with slogan"
+                className="premium-logo-image h-11 w-auto max-w-[220px] object-contain sm:h-12 sm:max-w-[260px]"
+              />
+            </a>
 
             <button
               onClick={() => setMobileMenuOpen((prev) => !prev)}
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-nav"
-              className="ml-auto rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold lg:hidden"
+              className="ml-auto rounded-full border border-slate-500/70 bg-slate-900/70 px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:border-cyan-300/60 hover:text-cyan-100 lg:hidden"
             >
               {mobileMenuOpen ? 'Close' : 'Menu'}
             </button>
 
-            <div className="order-3 flex w-full items-center rounded-md border border-slate-300 bg-white px-3 py-2 lg:order-none lg:ml-2 lg:max-w-sm lg:flex-1">
+            <form
+              onSubmit={handleSearch}
+              className="order-3 hidden w-full items-center rounded-full border border-slate-500/60 bg-slate-900/70 px-4 py-2 lg:order-none lg:ml-2 lg:flex lg:max-w-xs"
+            >
               <input
                 type="text"
-                placeholder="Search"
-                className="w-full bg-transparent text-sm outline-none"
+                value={searchQuery}
+                onChange={(event) => {
+                  setSearchQuery(event.target.value)
+                  if (searchFeedback) setSearchFeedback('')
+                }}
+                placeholder="Search sections"
+                className="w-full bg-transparent text-sm text-slate-200 placeholder:text-slate-400 outline-none"
               />
-              <span className="text-indigo-700">&#9906;</span>
-            </div>
+              <button type="submit" className="text-cyan-300" aria-label="Search">
+                &#9906;
+              </button>
+            </form>
 
-            <ul className="hidden items-center gap-5 text-sm font-medium lg:flex">
+            <ul className="hidden items-center gap-1 rounded-full border border-slate-600/60 bg-slate-900/60 p-1 text-sm font-medium lg:flex">
               {navItems.map((item) => (
                 <li key={item.label}>
-                  <a href={item.href} className="transition hover:text-indigo-700">
+                  <a
+                    href={item.href}
+                    className="block rounded-full px-3 py-2 text-slate-200 transition hover:bg-cyan-400/15 hover:text-cyan-200"
+                  >
                     {item.label}
                   </a>
                 </li>
               ))}
             </ul>
 
-            <button className="hidden rounded-md bg-indigo-700 px-6 py-2 text-sm font-semibold text-yellow-300 hover:bg-indigo-800 lg:block">
-              Login
+            <button className="hidden rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-5 py-2 text-sm font-semibold text-slate-950 shadow-lg shadow-cyan-900/40 transition hover:brightness-110 lg:block">
+              Get Started
             </button>
 
             {mobileMenuOpen && (
-              <div id="mobile-nav" className="order-4 mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 lg:hidden">
-                <ul className="space-y-2 text-sm font-medium">
+              <div
+                id="mobile-nav"
+                className="order-4 mt-2 w-full rounded-2xl border border-slate-600/70 bg-slate-900/95 p-3 lg:hidden"
+              >
+                <form onSubmit={handleSearch} className="mb-3 flex items-center rounded-full border border-slate-600 bg-slate-950/70 px-3 py-2">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(event) => {
+                      setSearchQuery(event.target.value)
+                      if (searchFeedback) setSearchFeedback('')
+                    }}
+                    placeholder="Search sections"
+                    className="w-full bg-transparent text-sm text-slate-200 placeholder:text-slate-400 outline-none"
+                  />
+                  <button type="submit" className="text-cyan-300" aria-label="Search">
+                    &#9906;
+                  </button>
+                </form>
+                <ul className="space-y-2 text-sm font-medium text-slate-200">
                   {navItems.map((item) => (
                     <li key={item.label}>
                       <a
                         href={item.href}
                         onClick={() => setMobileMenuOpen(false)}
-                        className="block rounded-md px-2 py-2 hover:bg-slate-100"
+                        className="block rounded-lg px-3 py-2 hover:bg-cyan-500/20"
                       >
                         {item.label}
                       </a>
                     </li>
                   ))}
                 </ul>
-                <button className="mt-3 w-full rounded-md bg-indigo-700 px-4 py-2 text-sm font-semibold text-yellow-300">
-                  Login
+                <button className="mt-3 w-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-4 py-2 text-sm font-semibold text-slate-950">
+                  Get Started
                 </button>
               </div>
             )}
           </nav>
+          {searchFeedback && (
+            <div className="border-t border-slate-700/60 bg-slate-900/70 px-4 py-2 text-xs text-cyan-200 sm:px-5">
+              {searchFeedback}
+            </div>
+          )}
         </header>
 
         <section
@@ -308,11 +431,11 @@ function App() {
                 data-reveal
                 className={`reveal ${index === 0 ? 'delay-5' : 'delay-6'} overflow-hidden rounded-xl border border-slate-600/70 bg-slate-800/70`}
               >
-                <div className="flex h-56 items-center justify-center bg-slate-900 p-2 sm:h-64">
+                <div className="flex aspect-[4/5] items-center justify-center bg-slate-900/80 p-3">
                   <img
                     src={course.image}
                     alt={`${course.title} course`}
-                    className="h-full w-full object-contain"
+                    className="max-h-full max-w-full object-contain"
                   />
                 </div>
                 <div className="p-4">
@@ -322,10 +445,13 @@ function App() {
                   <div className="mt-4 space-y-2">
                     {courseIncludes.map((item) => (
                       <p key={`${course.title}-${item}`} className="text-sm text-slate-300">
-                        • {item}
+                        - {item}
                       </p>
                     ))}
                   </div>
+                  {course.tagline && (
+                    <p className="mt-4 text-sm font-semibold text-amber-300">{course.tagline}</p>
+                  )}
                 </div>
               </div>
             ))}
@@ -421,6 +547,81 @@ function App() {
             <p>Response Time: Usually within 24 hours for email queries</p>
           </div>
         </section>
+
+        <footer
+          data-reveal
+          className="reveal delay-6 overflow-hidden rounded-3xl border border-cyan-400/25 bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950/70 p-6 shadow-2xl shadow-cyan-950/30 sm:p-8"
+        >
+          <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr_1fr]">
+            <div>
+              <a
+                href="#about-us"
+                className="premium-logo-shell inline-flex rounded-xl border border-slate-200/70 bg-slate-50/95 p-2 shadow-md shadow-slate-950/30"
+              >
+                <img
+                  src="/images/logo-style-4.svg"
+                  alt="CITS logo"
+                  className="premium-logo-image h-10 w-auto max-w-[220px] object-contain"
+                />
+              </a>
+              <p className="mt-4 max-w-md text-sm leading-7 text-slate-300">
+                Career-first learning platform focused on practical skills, interview readiness,
+                and job outcomes through mentor-led training.
+              </p>
+              <div className="mt-4 inline-flex rounded-full border border-cyan-400/30 bg-slate-900/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200">
+                More than teaching skills, we build futures
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[0.18em] text-cyan-300">Quick Links</p>
+              <ul className="mt-4 space-y-3">
+                {navItems.map((item) => (
+                  <li key={`footer-${item.label}`}>
+                    <a
+                      href={item.href}
+                      className="text-sm text-slate-300 transition hover:text-cyan-200"
+                    >
+                      {item.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[0.18em] text-cyan-300">Contact</p>
+              <div className="mt-4 space-y-3 text-sm text-slate-300">
+                <p>
+                  Email:{' '}
+                  <a className="font-semibold text-cyan-200 hover:underline" href="mailto:connectints1@gmail.com">
+                    connectints1@gmail.com
+                  </a>
+                </p>
+                <p>
+                  Phone:{' '}
+                  <a className="font-semibold text-cyan-200 hover:underline" href="tel:6303545755">
+                    6303545755
+                  </a>
+                </p>
+                <p>Mon-Sat | 9:00 AM to 7:00 PM</p>
+              </div>
+              <a
+                href={`https://wa.me/${whatsappNumber}`}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-5 inline-flex rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:brightness-110"
+              >
+                Chat on WhatsApp
+              </a>
+            </div>
+          </div>
+
+          <div className="mt-8 flex flex-col gap-3 border-t border-slate-700/70 pt-5 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+            <p>© {new Date().getFullYear()} CITS Connectints. All rights reserved.</p>
+            <p>Built for practical learning, verification, and placement outcomes.</p>
+          </div>
+        </footer>
       </main>
 
       <a
