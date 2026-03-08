@@ -13,6 +13,7 @@ const courses = [
     title: 'Versant Mock Test Practice by CITS',
     image: '/images/versant.png',
   },
+  { fee: '34999', title: 'Quality Analyst', image: '/images/quality.png' },
   { fee: '34999', title: 'ServiceNow by CITS', image: '/images/service-now.png' },
   { fee: '34999', title: 'Incident Management', image: '/images/incident-management.png' },
 ]
@@ -34,6 +35,7 @@ const courseIncludes = [
 const upcomingBatches = [
   { track: 'Oracle EBS by CITS', mode: 'Online Live', duration: '12 Weeks' },
   { track: 'Versant Mock Test Practice by CITS', mode: 'Online Live', duration: '4 Weeks' },
+  { track: 'Quality Analyst', mode: 'Online Live', duration: '10 Weeks' },
   { track: 'ServiceNow by CITS', mode: 'Online Live', duration: '12 Weeks' },
   { track: 'Incident Management', mode: 'Online Live', duration: '10 Weeks' },
 ]
@@ -59,20 +61,66 @@ const blogPreviews = [
   },
 ]
 
+const roadmapSteps = [
+  {
+    number: '1',
+    title: 'Get Started',
+    description: 'Kick off your journey by sending us a message on WhatsApp at +91 6303545766 and say Hi to begin.',
+    icon: '💬',
+    accent: 'from-fuchsia-400 to-violet-500',
+  },
+  {
+    number: '2',
+    title: 'Choose Your Course',
+    description: 'Browse our course catalog and pick the one that matches your learning goals and interests.',
+    icon: '📘',
+    accent: 'from-violet-400 to-purple-500',
+  },
+  {
+    number: '3',
+    title: 'Submit Your Request',
+    description: 'Fill out and submit your course application or select the course you are interested in.',
+    icon: '📝',
+    accent: 'from-sky-400 to-cyan-500',
+  },
+  {
+    number: '4',
+    title: 'Receive Enrollment Guidance',
+    description: 'Get detailed instructions to smoothly navigate through the enrollment process.',
+    icon: '⚙️',
+    accent: 'from-cyan-400 to-blue-500',
+  },
+  {
+    number: '5',
+    title: 'Join Live Classes',
+    description: 'Participate in interactive sessions led by experienced instructors and start building your skills.',
+    icon: '▶️',
+    accent: 'from-pink-400 to-fuchsia-500',
+  },
+]
+
 const navItems = [
   { label: 'Courses', href: '#courses' },
   { label: 'About Us', href: '#about-us' },
   { label: 'Founder & Co-Founder', href: '#leadership' },
+  { label: 'Roadmap', href: '#roadmap' },
   { label: 'Upcoming Batches', href: '#upcoming-batches' },
   { label: 'Verify Your Certificate', href: '#verify-certificate' },
   { label: 'Blogs', href: '#blogs' },
 ]
 
 const whatsappNumber = '916303545755'
+const InstagramIcon = ({ className = 'h-4 w-4' }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
+    <path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2Zm8.5 1.5h-8.5A4.25 4.25 0 0 0 3.5 7.75v8.5a4.25 4.25 0 0 0 4.25 4.25h8.5a4.25 4.25 0 0 0 4.25-4.25v-8.5a4.25 4.25 0 0 0-4.25-4.25ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 1.5A3.5 3.5 0 1 0 12 15.5 3.5 3.5 0 0 0 12 8.5Zm5.25-.88a1.12 1.12 0 1 1 0 2.24 1.12 1.12 0 0 1 0-2.24Z" />
+  </svg>
+)
+
 const searchTargets = [
-  { id: 'courses', label: 'Courses', keywords: ['course', 'servicenow', 'oracle', 'versant', 'incident'] },
+  { id: 'courses', label: 'Courses', keywords: ['course', 'servicenow', 'oracle', 'versant', 'incident', 'quality', 'qa', 'quality analyst'] },
   { id: 'about-us', label: 'About Us', keywords: ['about', 'cits', 'story', 'mission'] },
   { id: 'leadership', label: 'Founder & Co-Founder', keywords: ['founder', 'cofounder', 'leadership', 'tharun', 'surya'] },
+  { id: 'roadmap', label: 'Roadmap', keywords: ['roadmap', 'steps', 'enroll', 'enrollment', 'skill development'] },
   { id: 'upcoming-batches', label: 'Upcoming Batches', keywords: ['batch', 'upcoming', 'enrollment'] },
   { id: 'verify-certificate', label: 'Verify Your Certificate', keywords: ['verify', 'certificate', 'validation'] },
   { id: 'blogs', label: 'Blogs', keywords: ['blog', 'insights', 'career'] },
@@ -320,13 +368,18 @@ function App() {
               More than teaching skills, we build futures.
             </h1>
             <p className="max-w-4xl text-base leading-8 text-slate-200 sm:text-lg">
-              CITS was born after interview rejection, struggle, and determination. Instead
-              of giving up, the founders built a platform focused on opportunity,
-              employability, and practical career growth for students.
+              In 2025, two friends attended a job interview with great hopes, but they were rejected.
+              That day became a turning point in their lives. With empty pockets, hunger, and sleepless nights,
+              they struggled without stable jobs or income.
             </p>
             <p className="max-w-4xl text-base leading-8 text-slate-300 sm:text-lg">
-              Our training model combines concepts, implementation, and career preparation in one flow,
-              so students can confidently move from learning to placement readiness.
+              Instead of giving up, they transformed that struggle into a powerful idea:
+              Connectints, built to create opportunities and support others in building careers.
+              Today, CITS is growing as an EdTech community built by dreamers across India.
+            </p>
+            <p className="max-w-4xl text-base leading-8 text-slate-300 sm:text-lg">
+              Along with MSME registration, CITS also carries AICTE approval, ISO 21001:2018,
+              and Start-up India recognition.
             </p>
             <div className="flex flex-wrap gap-3 text-xs text-slate-200 sm:text-sm">
               <span data-reveal className="reveal delay-3 rounded-full border border-amber-400/70 px-4 py-2">AICTE Approved</span>
@@ -353,7 +406,8 @@ function App() {
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">Leadership</p>
           <h3 className="mt-2 text-2xl font-bold text-white">Founder &amp; Co-Founder</h3>
           <p className="mt-3 max-w-3xl text-slate-300">
-            CITS leadership focuses on practical outcomes, student confidence, and employability-first training.
+            The ideologies behind CITS are shaped by resilience, practical thinking,
+            and the mission to reduce unemployment through skill-first training.
           </p>
           <div className="mt-6 grid gap-6 md:grid-cols-2">
             <article
@@ -372,14 +426,27 @@ function App() {
                 <h4 className="text-xl font-bold text-white">Tharun Kumar</h4>
                 <div className="mt-3 grid gap-2 rounded-lg border border-cyan-500/30 bg-cyan-500/10 p-3 text-sm text-cyan-100">
                   <p><span className="font-semibold text-cyan-300">Education:</span> B.Tech in Computer Science Engineering</p>
-                  <p><span className="font-semibold text-cyan-300">Specialization:</span> Career mentorship, storytelling, and employability training</p>
+                  <p><span className="font-semibold text-cyan-300">Specialization:</span> Storytelling, mentorship, employability strategy, and real-world execution</p>
                 </div>
                 <p className="text-sm leading-7 text-slate-200">
-                  Founder &amp; CEO. A computer science engineer, storyteller, filmmaker,
-                  and mentor who built CITS to create career opportunities.
+                  More than a CEO, Tharun wears many hats: a farmer connected to his roots, a filmmaker and
+                  storyteller, a scriptwriter and director, a psychologist who understands people, and a corporate
+                  professional who values real-world experience.
                 </p>
                 <p className="text-sm italic text-cyan-200">
                   "I was born in hunger, and I don&apos;t want to see anyone suffer from it."
+                </p>
+                <p className="pt-1 text-sm">
+                  <a
+                    className="inline-flex items-center rounded-full border border-cyan-400/40 bg-cyan-500/10 p-2 text-cyan-300 transition hover:bg-cyan-500/20"
+                    href="https://www.instagram.com/tharun_sparkss?igsh=MXA3bDl0NnNpNGx2Yw=="
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="Founder Instagram"
+                    title="Founder Instagram"
+                  >
+                    <InstagramIcon className="h-5 w-5" />
+                  </a>
                 </p>
               </div>
             </article>
@@ -400,14 +467,27 @@ function App() {
                 <h4 className="text-xl font-bold text-white">Jyothi Prasad Surya</h4>
                 <div className="mt-3 grid gap-2 rounded-lg border border-cyan-500/30 bg-cyan-500/10 p-3 text-sm text-cyan-100">
                   <p><span className="font-semibold text-cyan-300">Education:</span> Engineering background in technology and systems</p>
-                  <p><span className="font-semibold text-cyan-300">Specialization:</span> Program design, technical strategy, and student skill development</p>
+                  <p><span className="font-semibold text-cyan-300">Specialization:</span> Program design, technical strategy, and leadership support systems</p>
                 </div>
                 <p className="text-sm leading-7 text-slate-200">
-                  Co-Founder &amp; CTO. A strong contributor who spent sleepless nights
-                  shaping ideas and programs aimed at reducing unemployment.
+                  Surya, son of a hardworking food vendor, played a significant role in shaping Tharun&apos;s journey.
+                  His encouragement, ideas, and sleepless brainstorming sessions helped transform intent into
+                  initiatives focused on reaching and helping people.
                 </p>
                 <p className="text-sm italic text-cyan-200">
-                  "More than our own lives, we often spoke about unemployment."
+                  "More than our own lives, we often spoke about the growing issue of unemployment."
+                </p>
+                <p className="pt-1 text-sm">
+                  <a
+                    className="inline-flex items-center rounded-full border border-cyan-400/40 bg-cyan-500/10 p-2 text-cyan-300 transition hover:bg-cyan-500/20"
+                    href="https://www.instagram.com/sj__surya_?igsh=MTZ1aWJsMWdxa2o5aA=="
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="Co-Founder Instagram"
+                    title="Co-Founder Instagram"
+                  >
+                    <InstagramIcon className="h-5 w-5" />
+                  </a>
                 </p>
               </div>
             </article>
@@ -459,6 +539,59 @@ function App() {
         </section>
 
         <section
+          id="roadmap"
+          data-reveal
+          className="reveal delay-5 overflow-hidden rounded-3xl border border-slate-700/70 bg-slate-900/60 p-6 sm:p-8 lg:p-10"
+        >
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">Enrollment Roadmap</p>
+          <h2 className="mt-2 text-3xl font-black text-white sm:text-4xl">A Roadmap to Skill Development</h2>
+          <p className="mt-3 max-w-4xl text-slate-300">
+            Follow these simple steps to enroll and start your online learning journey with CITS.
+          </p>
+
+          <div className="roadmap-shell mt-8 rounded-2xl border border-slate-700/60 bg-slate-950/60 p-4 sm:p-6">
+            <svg className="roadmap-line" viewBox="0 0 1000 220" preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="roadmapGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#d946ef" />
+                  <stop offset="35%" stopColor="#8b5cf6" />
+                  <stop offset="65%" stopColor="#38bdf8" />
+                  <stop offset="100%" stopColor="#ec4899" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M20,165 C180,230 250,20 390,80 C520,140 610,10 740,90 C850,160 930,225 980,135"
+                fill="none"
+                stroke="url(#roadmapGradient)"
+                strokeWidth="8"
+                strokeLinecap="round"
+              />
+            </svg>
+
+            <div className="relative z-10 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+              {roadmapSteps.map((step, index) => (
+                <article
+                  key={step.number}
+                  className="roadmap-step rounded-xl border border-slate-700/70 bg-slate-900/80 p-4"
+                  style={{ '--step-index': index }}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <p className={`bg-gradient-to-r ${step.accent} bg-clip-text text-5xl font-black leading-none text-transparent`}>
+                      {step.number}
+                    </p>
+                    <span className="grid h-10 w-10 place-items-center rounded-full border border-slate-600 bg-slate-950/80 text-lg">
+                      {step.icon}
+                    </span>
+                  </div>
+                  <h3 className="mt-3 text-lg font-bold text-white">{step.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-300">{step.description}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section
           id="upcoming-batches"
           data-reveal
           className="reveal delay-5 rounded-2xl border border-slate-700/70 bg-slate-900/60 p-6 sm:p-8"
@@ -477,6 +610,16 @@ function App() {
               </article>
             ))}
           </div>
+        </section>
+
+        <section
+          data-reveal
+          className="reveal delay-6 rounded-2xl border border-emerald-400/35 bg-gradient-to-r from-emerald-500/15 via-cyan-500/10 to-sky-500/15 p-5 sm:p-6"
+        >
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">Referral Program</p>
+          <p className="mt-2 text-lg font-semibold text-slate-100">
+            Refer Friends. Help Them Learn. Earn Rewards with CITS.
+          </p>
         </section>
 
         <section
@@ -518,33 +661,6 @@ function App() {
                 <p className="mt-2 text-sm leading-6 text-slate-300">{post.summary}</p>
               </article>
             ))}
-          </div>
-        </section>
-
-        <section
-          data-reveal
-          className="reveal delay-5 rounded-2xl border border-slate-700/70 bg-slate-900/60 p-6 sm:p-8"
-        >
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">Contact</p>
-          <h2 className="mt-2 text-2xl font-bold text-white">Get In Touch</h2>
-          <p className="mt-3 max-w-3xl text-slate-300">
-            Reach out for course details, mentoring support, partnership opportunities, and certificate verification queries.
-          </p>
-          <div className="mt-5 space-y-3 text-slate-200">
-            <p>
-              Email:{' '}
-              <a className="font-semibold text-cyan-300 hover:underline" href="mailto:connectints1@gmail.com">
-                connectints1@gmail.com
-              </a>
-            </p>
-            <p>
-              Contact Number:{' '}
-              <a className="font-semibold text-cyan-300 hover:underline" href="tel:6303545755">
-                6303545755
-              </a>
-            </p>
-            <p>Support Hours: Monday to Saturday, 9:00 AM to 7:00 PM</p>
-            <p>Response Time: Usually within 24 hours for email queries</p>
           </div>
         </section>
 
@@ -600,11 +716,44 @@ function App() {
                 </p>
                 <p>
                   Phone:{' '}
-                  <a className="font-semibold text-cyan-200 hover:underline" href="tel:6303545755">
-                    6303545755
+                  <a className="font-semibold text-cyan-200 hover:underline" href="tel:+916303545755">
+                    +91 6303545755
+                  </a>
+                </p>
+                <p>
+                  Alternate Phone:{' '}
+                  <a className="font-semibold text-cyan-200 hover:underline" href="tel:+918247097984">
+                    +91 8247097984
+                  </a>
+                </p>
+                <p className="flex items-center gap-3">
+                  <span>Founder Insta:</span>
+                  <a
+                    className="inline-flex items-center rounded-full border border-cyan-400/40 bg-cyan-500/10 p-2 text-cyan-200 transition hover:bg-cyan-500/20"
+                    href="https://www.instagram.com/tharun_sparkss?igsh=MXA3bDl0NnNpNGx2Yw=="
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="Founder Instagram"
+                    title="Founder Instagram"
+                  >
+                    <InstagramIcon className="h-5 w-5" />
+                  </a>
+                </p>
+                <p className="flex items-center gap-3">
+                  <span>Co-Founder Insta:</span>
+                  <a
+                    className="inline-flex items-center rounded-full border border-cyan-400/40 bg-cyan-500/10 p-2 text-cyan-200 transition hover:bg-cyan-500/20"
+                    href="https://www.instagram.com/sj__surya_?igsh=MTZ1aWJsMWdxa2o5aA=="
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="Co-Founder Instagram"
+                    title="Co-Founder Instagram"
+                  >
+                    <InstagramIcon className="h-5 w-5" />
                   </a>
                 </p>
                 <p>Mon-Sat | 9:00 AM to 7:00 PM</p>
+                <p>Response Time: Usually within 24 hours for email queries.</p>
               </div>
               <a
                 href={`https://wa.me/${whatsappNumber}`}

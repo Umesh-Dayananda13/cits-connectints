@@ -50,6 +50,21 @@ body {
   }
 }
 
+@keyframes roadmapFlow {
+  to {
+    stroke-dashoffset: -720;
+  }
+}
+
+@keyframes roadmapFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
 .premium-logo-shell {
   position: relative;
   overflow: hidden;
@@ -88,6 +103,37 @@ body {
 .premium-logo-image {
   position: relative;
   z-index: 1;
+}
+
+.roadmap-shell {
+  position: relative;
+}
+
+.roadmap-line {
+  position: absolute;
+  inset: 10px 10px auto 10px;
+  height: 200px;
+  width: calc(100% - 20px);
+  opacity: 0.85;
+  pointer-events: none;
+  filter: drop-shadow(0 0 16px rgba(139, 92, 246, 0.35));
+}
+
+.roadmap-line path {
+  stroke-dasharray: 18 12;
+  animation: roadmapFlow 16s linear infinite;
+}
+
+.roadmap-step {
+  animation: roadmapFloat 4.8s ease-in-out infinite;
+  animation-delay: calc(var(--step-index, 0) * 220ms);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.roadmap-step:hover {
+  transform: translateY(-8px) scale(1.01);
+  border-color: rgba(56, 189, 248, 0.55);
+  box-shadow: 0 16px 28px rgba(2, 6, 23, 0.45);
 }
 
 .highlightable-section {
