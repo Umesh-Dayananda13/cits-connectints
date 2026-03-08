@@ -65,6 +65,24 @@ body {
   }
 }
 
+@keyframes placementPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.14);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(34, 211, 238, 0.08);
+  }
+}
+
+@keyframes placementFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
 .premium-logo-shell {
   position: relative;
   overflow: hidden;
@@ -134,6 +152,40 @@ body {
   transform: translateY(-8px) scale(1.01);
   border-color: rgba(56, 189, 248, 0.55);
   box-shadow: 0 16px 28px rgba(2, 6, 23, 0.45);
+}
+
+.placement-card {
+  position: relative;
+  overflow: hidden;
+  animation: placementFloat 5.5s ease-in-out infinite;
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.placement-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.09), transparent 45%, rgba(244, 114, 182, 0.08));
+  pointer-events: none;
+}
+
+.placement-card:hover {
+  transform: translateY(-8px) scale(1.015);
+  border-color: rgba(34, 211, 238, 0.6);
+  box-shadow: 0 20px 35px rgba(2, 6, 23, 0.5);
+}
+
+.placement-person-image {
+  animation: placementPulse 3.2s ease-in-out infinite;
+}
+
+.placement-company-shell {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.placement-card:hover .placement-company-shell {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 8px 18px rgba(2, 6, 23, 0.35);
 }
 
 .highlightable-section {

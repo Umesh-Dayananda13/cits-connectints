@@ -99,10 +99,41 @@ const roadmapSteps = [
   },
 ]
 
+const placedStudents = [
+  {
+    name: 'S Gowtham',
+    role: 'Process Executive to Associate',
+    company: 'NTT DATA',
+    package: 'Role Upgrade',
+    batch: '2026',
+    personImage: '/images/gowtham.jpeg',
+    companyImage: '/images/NTT%20DATA.jpeg',
+  },
+  {
+    name: 'Ayeesha',
+    role: 'Executive to IT Support Engineer',
+    company: 'Wipro',
+    package: 'Role Upgrade',
+    batch: '2026',
+    personImage: '/images/ayeesha.jpeg',
+    companyImage: '/images/wipro.jpeg',
+  },
+  {
+    name: 'Rahul Verma',
+    role: 'Incident Management Executive',
+    company: 'CloudBridge Support',
+    package: '4.2 LPA',
+    batch: 'Mar 2026',
+    personImage: '/images/tharun.png',
+    companyImage: '/images/logo-cits.svg',
+  },
+]
+
 const navItems = [
   { label: 'Courses', href: '#courses' },
   { label: 'About Us', href: '#about-us' },
   { label: 'Founder & Co-Founder', href: '#leadership' },
+  { label: 'Placed Students', href: '#placed-students' },
   { label: 'Roadmap', href: '#roadmap' },
   { label: 'Upcoming Batches', href: '#upcoming-batches' },
   { label: 'Verify Your Certificate', href: '#verify-certificate' },
@@ -120,6 +151,7 @@ const searchTargets = [
   { id: 'courses', label: 'Courses', keywords: ['course', 'servicenow', 'oracle', 'versant', 'incident', 'quality', 'qa', 'quality analyst'] },
   { id: 'about-us', label: 'About Us', keywords: ['about', 'cits', 'story', 'mission'] },
   { id: 'leadership', label: 'Founder & Co-Founder', keywords: ['founder', 'cofounder', 'leadership', 'tharun', 'surya'] },
+  { id: 'placed-students', label: 'Placed Students', keywords: ['placed', 'placement', 'students', 'hired', 'job'] },
   { id: 'roadmap', label: 'Roadmap', keywords: ['roadmap', 'steps', 'enroll', 'enrollment', 'skill development'] },
   { id: 'upcoming-batches', label: 'Upcoming Batches', keywords: ['batch', 'upcoming', 'enrollment'] },
   { id: 'verify-certificate', label: 'Verify Your Certificate', keywords: ['verify', 'certificate', 'validation'] },
@@ -607,6 +639,53 @@ function App() {
                 <h3 className="text-lg font-semibold text-white">{batch.track}</h3>
                 <p className="mt-2 text-sm text-slate-300">Mode: {batch.mode}</p>
                 <p className="text-sm text-slate-300">Duration: {batch.duration}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section
+          id="placed-students"
+          data-reveal
+          className="reveal delay-6 rounded-2xl border border-slate-700/70 bg-slate-900/60 p-6 sm:p-8"
+        >
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">Placement Highlights</p>
+          <h2 className="mt-2 text-2xl font-bold text-white">Placed Students</h2>
+          <p className="mt-3 max-w-3xl text-slate-300">
+            Showcase student success stories here. These cards are ready for posting new placement updates.
+          </p>
+          <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {placedStudents.map((student, index) => (
+              <article
+                key={`${student.name}-${student.company}`}
+                data-reveal
+                className={`placement-card reveal ${index === 0 ? 'delay-4' : index === 1 ? 'delay-5' : 'delay-6'} rounded-2xl border border-slate-700 bg-slate-950/85 p-5`}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={student.personImage || '/images/tharun.png'}
+                      alt={`${student.name} profile`}
+                      className="placement-person-image h-20 w-20 rounded-2xl border border-cyan-400/40 bg-slate-900 p-1 object-contain object-center"
+                    />
+                    <div>
+                      <h3 className="text-xl font-bold text-white">{student.name}</h3>
+                      <p className="mt-1 text-sm font-medium text-cyan-200">{student.role}</p>
+                    </div>
+                  </div>
+                  <div className="placement-company-shell rounded-xl border border-slate-600/80 bg-white p-1.5">
+                    <img
+                      src={student.companyImage || '/images/logo-cits.svg'}
+                      alt={`${student.company} logo`}
+                      className="h-12 w-20 rounded-lg object-contain"
+                    />
+                  </div>
+                </div>
+                <div className="mt-5 space-y-2 text-sm text-slate-300">
+                  <p><span className="font-semibold text-slate-200">Company:</span> {student.company}</p>
+                  <p><span className="font-semibold text-slate-200">Package:</span> {student.package}</p>
+                  <p><span className="font-semibold text-slate-200">Batch:</span> {student.batch}</p>
+                </div>
               </article>
             ))}
           </div>
