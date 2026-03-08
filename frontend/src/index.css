@@ -18,6 +18,22 @@ body {
   background: radial-gradient(circle at top, #0f172a 0%, #020617 60%);
 }
 
+.site-navbar {
+  position: relative;
+  isolation: isolate;
+  box-shadow:
+    0 10px 26px rgba(2, 6, 23, 0.48),
+    0 1px 0 rgba(34, 211, 238, 0.12) inset;
+}
+
+.site-navbar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(120deg, rgba(15, 23, 42, 0.98), rgba(2, 6, 23, 0.98));
+}
+
 @keyframes premiumFlow {
   0% {
     background-position: 0% 50%;

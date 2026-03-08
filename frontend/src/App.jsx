@@ -283,10 +283,9 @@ function App() {
     <div className="page-enter min-h-screen bg-slate-950 text-slate-100">
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
         <header
-          data-reveal
-          className="reveal delay-1 sticky top-3 z-40 overflow-hidden rounded-2xl border border-cyan-300/20 bg-slate-950/75 text-slate-100 shadow-2xl shadow-cyan-950/30 backdrop-blur-xl"
+          className="site-navbar sticky top-2 z-50 overflow-hidden rounded-2xl border border-cyan-300/25 bg-slate-950 text-slate-100"
         >
-          <nav className="flex flex-wrap items-center gap-3 px-4 py-4 sm:gap-4 sm:px-5">
+          <nav className="flex flex-wrap items-center gap-3 px-4 py-3 sm:gap-4 sm:px-5">
             <a
               href="#about-us"
               className="premium-logo-shell rounded-xl border border-slate-200/70 bg-slate-50/95 p-2 shadow-md shadow-slate-950/30"
@@ -309,7 +308,7 @@ function App() {
 
             <form
               onSubmit={handleSearch}
-              className="order-3 hidden w-full items-center rounded-full border border-slate-500/60 bg-slate-900/70 px-4 py-2 lg:order-none lg:ml-2 lg:flex lg:max-w-xs"
+              className="order-3 hidden w-full items-center rounded-full border border-slate-500/60 bg-slate-900 px-4 py-2 lg:order-none lg:ml-2 lg:flex lg:max-w-xs"
             >
               <input
                 type="text"
@@ -326,7 +325,7 @@ function App() {
               </button>
             </form>
 
-            <ul className="hidden items-center gap-1 rounded-full border border-slate-600/60 bg-slate-900/60 p-1 text-sm font-medium lg:flex">
+            <ul className="hidden items-center gap-1 rounded-full border border-slate-600/70 bg-slate-900 p-1 text-sm font-medium lg:flex">
               {navItems.map((item) => (
                 <li key={item.label}>
                   <a
@@ -346,7 +345,7 @@ function App() {
             {mobileMenuOpen && (
               <div
                 id="mobile-nav"
-                className="order-4 mt-2 w-full rounded-2xl border border-slate-600/70 bg-slate-900/95 p-3 lg:hidden"
+                className="order-4 mt-2 w-full rounded-2xl border border-slate-600/80 bg-slate-900 p-3 lg:hidden"
               >
                 <form onSubmit={handleSearch} className="mb-3 flex items-center rounded-full border border-slate-600 bg-slate-950/70 px-3 py-2">
                   <input
