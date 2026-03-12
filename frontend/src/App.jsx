@@ -523,7 +523,7 @@ function App() {
       clearTimeout(visibilityFallback)
       observer.disconnect()
     }
-  }, [accessMode, isLoading, location.pathname])
+  }, [accessMode, isLoading, location.pathname, siteContent])
 
   // Current use: make section jumps more obvious after navbar search or keyboard focus.
   // Future production change: revisit this if the page moves from one long route to multiple routed pages.
