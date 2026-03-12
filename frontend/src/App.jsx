@@ -887,7 +887,7 @@ function App() {
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {siteCourses.map((course, index) => (
               <div
-                key={course.title}
+                key={`${course.title || 'course'}-${index}`}
                 data-reveal
                 className={`reveal ${index === 0 ? 'delay-5' : 'delay-6'} overflow-hidden rounded-xl border border-slate-600/70 bg-slate-800/70`}
               >

@@ -65,6 +65,16 @@ const cloneValue = (value) => JSON.parse(JSON.stringify(value))
 const toLines = (items) => items.join('\n')
 const toLineArray = (value) => value.split('\n').map((item) => item.trim()).filter(Boolean)
 const toCommaArray = (value) => value.split(',').map((item) => item.trim()).filter(Boolean)
+const findDuplicateValue = (items) => {
+  const seen = new Set()
+
+  for (const item of items) {
+    if (seen.has(item)) return item
+    seen.add(item)
+  }
+
+  return ''
+}
 
 function Field({ label, children, hint }) {
   return (
@@ -294,6 +304,23 @@ function AdminPanel({ onLogout, userEmail }) {
   const handleSave = async () => {
     if (isUploadInProgress) {
       setSaveNotice('Wait for the current image upload to finish before saving.')
+      return
+    }
+
+    const missingCourseTitleIndex = contentDraft.courses.findIndex((course) => !course.title?.trim())
+    if (missingCourseTitleIndex !== -1) {
+      setSaveNotice(`Course ${missingCourseTitleIndex + 1} needs a title before saving.`)
+      return
+    }
+
+    const duplicateCourseTitle = findDuplicateValue(
+      contentDraft.courses
+        .map((course) => course.title?.trim().toLowerCase())
+        .filter(Boolean),
+    )
+
+    if (duplicateCourseTitle) {
+      setSaveNotice(`Course title "${duplicateCourseTitle}" is duplicated. Use a unique title so the public list renders correctly.`)
       return
     }
 
