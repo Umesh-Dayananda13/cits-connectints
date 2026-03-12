@@ -1,0 +1,138 @@
+{
+  "contact": {
+    "alternatePhone": "+91 8247097984",
+    "email": "connectints1@gmail.com",
+    "phone": "+91 6303545755",
+    "supportHours": "Mon-Sat | 9:00 AM to 7:00 PM",
+    "whatsappNumber": "916303545755"
+  },
+  "courses": [
+    {
+      "fee": "69999",
+      "image": "/images/oracle.jpeg",
+      "tagline": "Learn. Practice. Get Placed.",
+      "title": "Oracle EBS by CITS"
+    },
+    {
+      "fee": "1999",
+      "image": "/images/versant.png",
+      "title": "Versant Mock Test Practice by CITS"
+    },
+    {
+      "fee": "34999",
+      "image": "/images/quality.png",
+      "title": "Quality Analyst"
+    },
+    {
+      "fee": "34999",
+      "image": "/images/service-now.png",
+      "title": "ServiceNow by CITS"
+    },
+    {
+      "fee": "34999",
+      "image": "/images/incident-management.png",
+      "title": "Incident Management"
+    }
+  ],
+  "courseIncludes": [
+    "Live instructor-led classes",
+    "Interview preparation with mock rounds",
+    "Resume and LinkedIn optimization",
+    "Hands-on assignments with feedback"
+  ],
+  "impactStats": [
+    { "label": "Students Guided", "value": "1000+" },
+    { "label": "Live Sessions", "value": "250+" },
+    { "label": "Mentor Support", "value": "1:1 Access" },
+    { "label": "Industry Projects", "value": "Real Case Studies" }
+  ],
+  "navItems": [
+    { "href": "#courses", "label": "Courses" },
+    { "href": "#about-us", "label": "About Us" },
+    { "href": "#leadership", "label": "Founder & Co-Founder" },
+    { "href": "#placed-students", "label": "Placed Students" },
+    { "href": "#roadmap", "label": "Roadmap" },
+    { "href": "#upcoming-batches", "label": "Upcoming Batches" },
+    { "href": "#verify-certificate", "label": "Verify Your Certificate" },
+    { "href": "#blogs", "label": "Blogs" }
+  ],
+  "placedStudents": [
+    {
+      "batch": "2026",
+      "company": "NTT DATA",
+      "companyImage": "/images/NTT%20DATA.jpeg",
+      "name": "S Gowtham",
+      "package": "Role Upgrade",
+      "personImage": "/images/gowtham.jpeg",
+      "role": "Process Executive to Associate"
+    },
+    {
+      "batch": "2026",
+      "company": "Wipro",
+      "companyImage": "/images/wipro.jpeg",
+      "name": "Ayeesha",
+      "package": "Role Upgrade",
+      "personImage": "/images/ayeesha.jpeg",
+      "role": "Executive to IT Support Engineer"
+    }
+  ],
+  "roadmapSteps": [
+    {
+      "accent": "from-fuchsia-400 to-violet-500",
+      "description": "Kick off your journey by sending us a message on WhatsApp at +91 6303545766 and say Hi to begin.",
+      "icon": "💬",
+      "number": "1",
+      "title": "Get Started"
+    },
+    {
+      "accent": "from-violet-400 to-purple-500",
+      "description": "Browse our course catalog and pick the one that matches your learning goals and interests.",
+      "icon": "📘",
+      "number": "2",
+      "title": "Choose Your Course"
+    },
+    {
+      "accent": "from-sky-400 to-cyan-500",
+      "description": "Fill out and submit your course application or select the course you are interested in.",
+      "icon": "📝",
+      "number": "3",
+      "title": "Submit Your Request"
+    },
+    {
+      "accent": "from-cyan-400 to-blue-500",
+      "description": "Get detailed instructions to smoothly navigate through the enrollment process.",
+      "icon": "⚙️",
+      "number": "4",
+      "title": "Receive Enrollment Guidance"
+    },
+    {
+      "accent": "from-pink-400 to-fuchsia-500",
+      "description": "Participate in interactive sessions led by experienced instructors and start building your skills.",
+      "icon": "▶️",
+      "number": "5",
+      "title": "Join Live Classes"
+    }
+  ],
+  "searchTargets": [
+    { "id": "courses", "keywords": ["course", "servicenow", "oracle", "versant", "incident", "quality", "qa", "quality analyst"], "label": "Courses" },
+    { "id": "about-us", "keywords": ["about", "cits", "story", "mission"], "label": "About Us" },
+    { "id": "leadership", "keywords": ["founder", "cofounder", "leadership", "tharun", "surya"], "label": "Founder & Co-Founder" },
+    { "id": "placed-students", "keywords": ["placed", "placement", "students", "hired", "job"], "label": "Placed Students" },
+    { "id": "roadmap", "keywords": ["roadmap", "steps", "enroll", "enrollment", "skill development"], "label": "Roadmap" },
+    { "id": "upcoming-batches", "keywords": ["batch", "upcoming", "enrollment"], "label": "Upcoming Batches" },
+    { "id": "verify-certificate", "keywords": ["verify", "certificate", "validation"], "label": "Verify Your Certificate" },
+    { "id": "blogs", "keywords": ["blog", "insights", "career"], "label": "Blogs" }
+  ],
+  "upcomingBatches": [
+    { "duration": "12 Weeks", "mode": "Online Live", "track": "Oracle EBS by CITS" },
+    { "duration": "4 Weeks", "mode": "Online Live", "track": "Versant Mock Test Practice by CITS" },
+    { "duration": "10 Weeks", "mode": "Online Live", "track": "Quality Analyst" },
+    { "duration": "12 Weeks", "mode": "Online Live", "track": "ServiceNow by CITS" },
+    { "duration": "10 Weeks", "mode": "Online Live", "track": "Incident Management" }
+  ],
+  "verificationSteps": [
+    "Send your certificate ID to connectints1@gmail.com",
+    "Include your full name and course name in the email",
+    "Our team validates your record and responds with confirmation"
+  ]
+}

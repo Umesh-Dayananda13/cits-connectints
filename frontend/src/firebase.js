@@ -1,9 +1,15 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
+import { getFirestore } from 'firebase/firestore'
 
+// Frontend-only Firebase setup.
+// Used by:
+// - App.jsx for Firebase Auth session handling
+// - services/siteContent.js for Firestore content access
+// Backend does not import this file; backend config is separate.
 // This module owns the single Firebase app/auth instance for the frontend.
 // Current use: email/password authentication from App.jsx.
-// Future production change: initialize Firestore, Storage, Analytics, or provider auth here
+// Future production change: initialize Storage, Analytics, or provider auth here
 // so the rest of the app continues importing Firebase services from one place.
 
 // Read Firebase config from Vite env so the app source stays portable between projects.
@@ -12,7 +18,6 @@ const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 }
@@ -35,3 +40,4 @@ const firebaseApp = isFirebaseConfigured ? initializeApp(firebaseConfig) : null
 // Export a nullable auth instance. App.jsx uses this to decide whether auth flows are
 // available now, and future services should follow the same pattern if they are optional.
 export const auth = firebaseApp ? getAuth(firebaseApp) : null
+export const db = firebaseApp ? getFirestore(firebaseApp) : null

@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 
+// AuthScreen is UI-only.
+// Used by App.jsx on /login and /signup while App.jsx keeps all Firebase auth logic.
+
 // Marketing phrases for the animated hero line.
 // Current use: visual brand motion on the auth landing page.
 // Future production change: replace these with CMS/API content here without touching form logic.
@@ -19,6 +22,7 @@ const heroHighlights = [
 ]
 
 function TrustShieldIcon() {
+  // Local icon used only inside the auth trust strip.
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" className="h-5 w-5">
       <path

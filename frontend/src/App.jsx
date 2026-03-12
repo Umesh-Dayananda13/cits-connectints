@@ -7,13 +7,24 @@ import {
   updateProfile,
 } from 'firebase/auth'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { defaultSiteContent } from './content/siteContent'
+import AdminPanel from './components/AdminPanel'
 import AuthScreen from './components/AuthScreen'
+import ChatbotWidget from './components/ChatbotWidget'
 import './index.css'
 import { auth, firebaseConfigIssue, isFirebaseConfigured } from './firebase'
+import { subscribeSiteContent } from './services/siteContent'
+
+// Main frontend shell.
+// Owns:
+// - auth routing (/login, /signup, /home, /admin)
+// - Firebase Auth session handling
+// - Firestore content subscription for the public site and chatbot
+// - admin route gating by configured email list
 
 // Current use: static course cards for the home page catalog.
 // Future production change: replace this array with CMS, backend, or Firestore content.
-const courses = [
+const _courses = [
   {
     fee: '69999',
     title: 'Oracle EBS by CITS',
@@ -32,7 +43,7 @@ const courses = [
 
 // Current use: hard-coded brand proof points in the About section.
 // Future production change: connect these values to verified reporting before publishing live metrics.
-const impactStats = [
+const _impactStats = [
   { label: 'Students Guided', value: '1000+' },
   { label: 'Live Sessions', value: '250+' },
   { label: 'Mentor Support', value: '1:1 Access' },
@@ -41,7 +52,7 @@ const impactStats = [
 
 // Current use: shared bullet copy under every course card.
 // Future production change: move this into each course record if different tracks need different benefits.
-const courseIncludes = [
+const _courseIncludes = [
   'Live instructor-led classes',
   'Interview preparation with mock rounds',
   'Resume and LinkedIn optimization',
@@ -50,7 +61,7 @@ const courseIncludes = [
 
 // Current use: placeholder batch information for the upcoming-batches section.
 // Future production change: replace with real batch schedules, dates, and enrollment status.
-const upcomingBatches = [
+const _upcomingBatches = [
   { track: 'Oracle EBS by CITS', mode: 'Online Live', duration: '12 Weeks' },
   { track: 'Versant Mock Test Practice by CITS', mode: 'Online Live', duration: '4 Weeks' },
   { track: 'Quality Analyst', mode: 'Online Live', duration: '10 Weeks' },
@@ -60,7 +71,7 @@ const upcomingBatches = [
 
 // Current use: manual certificate verification instructions.
 // Future production change: replace with an automated verification form or backend lookup flow.
-const verificationSteps = [
+const _verificationSteps = [
   'Send your certificate ID to connectints1@gmail.com',
   'Include your full name and course name in the email',
   'Our team validates your record and responds with confirmation',
@@ -68,7 +79,7 @@ const verificationSteps = [
 
 // Current use: placeholder blog cards to hold layout space.
 // Future production change: source these from a CMS, markdown pipeline, or backend blog API.
-const blogPreviews = [
+const _blogPreviews = [
   {
     title: 'How to Prepare for ServiceNow Interviews in 30 Days',
     summary: 'A focused roadmap with weekly goals, practical exercises, and mock interview checkpoints.',
@@ -85,7 +96,7 @@ const blogPreviews = [
 
 // Current use: static enrollment journey content for the roadmap section.
 // Future production change: keep this array as the single edit point if enrollment steps or channels change.
-const roadmapSteps = [
+const _roadmapSteps = [
   {
     number: '1',
     title: 'Get Started',
@@ -125,7 +136,7 @@ const roadmapSteps = [
 
 // Current use: local placement showcase cards for social proof.
 // Future production change: connect this to approved placement records with optional filtering by course/batch.
-const placedStudents = [
+const _placedStudents = [
   {
     name: 'S Gowtham',
     role: 'Process Executive to Associate',
@@ -157,7 +168,7 @@ const placedStudents = [
 
 // Current use: one-page navigation and footer quick links.
 // Future production change: keep section IDs in sync here if routes or section names change.
-const navItems = [
+const _navItems = [
   { label: 'Courses', href: '#courses' },
   { label: 'About Us', href: '#about-us' },
   { label: 'Founder & Co-Founder', href: '#leadership' },
@@ -168,7 +179,11 @@ const navItems = [
   { label: 'Blogs', href: '#blogs' },
 ]
 
-const whatsappNumber = '916303545755'
+const _whatsappNumber = '916303545755'
+const _contactEmail = 'connectints1@gmail.com'
+const _primaryPhone = '+91 6303545755'
+const _alternatePhone = '+91 8247097984'
+const _supportHours = 'Mon-Sat | 9:00 AM to 7:00 PM'
 
 // Small reusable icon component for founder and company social links.
 const InstagramIcon = ({ className = 'h-4 w-4' }) => (
@@ -179,7 +194,7 @@ const InstagramIcon = ({ className = 'h-4 w-4' }) => (
 
 // Current use: lightweight client-side search that jumps to page sections.
 // Future production change: extend keywords here or swap to a real search index without changing the UI.
-const searchTargets = [
+const _searchTargets = [
   { id: 'courses', label: 'Courses', keywords: ['course', 'servicenow', 'oracle', 'versant', 'incident', 'quality', 'qa', 'quality analyst'] },
   { id: 'about-us', label: 'About Us', keywords: ['about', 'cits', 'story', 'mission'] },
   { id: 'leadership', label: 'Founder & Co-Founder', keywords: ['founder', 'cofounder', 'leadership', 'tharun', 'surya'] },
@@ -205,6 +220,14 @@ const firebaseAuthMessages = {
 const getFirebaseAuthMessage = (error) => (
   firebaseAuthMessages[error?.code] || 'Authentication failed. Please try again.'
 )
+
+const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS || '')
+  .split(',')
+  .map((value) => value.trim().toLowerCase())
+  .filter(Boolean)
+
+const areAdminEmailsConfigured = adminEmails.length > 0
+const isAdminEmail = (email) => adminEmails.includes((email || '').trim().toLowerCase())
 
 // Normalize names derived from email prefixes until richer member profiles exist.
 const formatMemberName = (value) => (
@@ -265,15 +288,44 @@ function App() {
   const [isAuthReady, setIsAuthReady] = useState(!isFirebaseConfigured)
   const [isAuthBusy, setIsAuthBusy] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [currentUser, setCurrentUser] = useState(null)
   const [memberName, setMemberName] = useState('')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchFeedback, setSearchFeedback] = useState('')
+  const [siteContent, setSiteContent] = useState(defaultSiteContent)
   // Current routing keeps auth on /login and /signup, with the protected site on /home.
   // Future production change: expand this route-driven mode if onboarding or member dashboards split out.
   const authMode = location.pathname === '/signup' ? 'signup' : 'signin'
   const homeAccessLabel = 'Member Access'
   const homeVisitorLabel = `Welcome, ${memberName || 'Member'}`
+  const isAdmin = areAdminEmailsConfigured ? isAdminEmail(currentUser?.email) : Boolean(currentUser?.email)
+  // Everything below is the public site data source. /admin writes to Firestore,
+  // subscribeSiteContent reads that same document, and /home renders from it here.
+  const {
+    about,
+    blogPreviews: siteBlogPreviews,
+    contact,
+    courseIncludes: siteCourseIncludes,
+    courses: siteCourses,
+    footer,
+    impactStats: siteImpactStats,
+    leadershipMembers,
+    navItems: siteNavItems,
+    placedStudents: sitePlacedStudents,
+    referralBanner,
+    roadmapSteps: siteRoadmapSteps,
+    searchTargets: siteSearchTargets,
+    upcomingBatches: siteUpcomingBatches,
+    verificationSteps: siteVerificationSteps,
+  } = siteContent
+  const {
+    alternatePhone,
+    email: contactEmail,
+    phone: primaryPhone,
+    supportHours,
+    whatsappNumber,
+  } = contact
 
   // Firebase becomes the source of truth for signed-in users after configuration is present.
   // Future production change: fetch roles, profile data, or onboarding status in this callback.
@@ -285,9 +337,11 @@ function App() {
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
+        setCurrentUser(user)
         setAccessMode('member')
         setMemberName(getMemberName(user))
       } else {
+        setCurrentUser(null)
         setAccessMode('')
         setMemberName('')
       }
@@ -297,6 +351,24 @@ function App() {
 
     return unsubscribe
   }, [])
+
+  // Firestore now acts as the shared content source for both the page and the chatbot.
+  // Future production change: move admin editing into the app so this subscription stays the only read path.
+  useEffect(() => {
+    if (!isAuthReady) return undefined
+
+    if (!currentUser) {
+      setSiteContent(defaultSiteContent)
+      return undefined
+    }
+
+    const unsubscribe = subscribeSiteContent(
+      (nextContent) => setSiteContent(nextContent),
+      (error) => console.error('Firestore site content sync failed', error),
+    )
+
+    return unsubscribe
+  }, [currentUser, isAuthReady])
 
   // Keep field editing local so the auth form feels responsive before any network request is made.
   const handleAuthFieldChange = (event) => {
@@ -383,6 +455,7 @@ function App() {
   // Logout resets local UI state first, then ends the Firebase session if one exists.
   // Future production change: clear cached profile/role data here as more member data is added.
   const handleLogout = async () => {
+    setCurrentUser(null)
     setAccessMode('')
     setMemberName('')
     setAuthError('')
@@ -478,6 +551,20 @@ function App() {
 
   // Current use: keyword-to-section scrolling for the single-page home layout.
   // Future production change: replace with routed search results if content stops living on one page.
+  const openSection = (sectionId, label) => {
+    const sectionNode = document.getElementById(sectionId)
+    if (!sectionNode) {
+      setSearchFeedback('Section exists in menu but not found on page.')
+      return false
+    }
+
+    sectionNode.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    sectionNode.focus()
+    if (label) setSearchFeedback(`Showing: ${label}`)
+    setMobileMenuOpen(false)
+    return true
+  }
+
   const handleSearch = (event) => {
     event.preventDefault()
     const query = searchQuery.trim().toLowerCase()
@@ -487,7 +574,7 @@ function App() {
       return
     }
 
-    const matchedTarget = searchTargets.find((target) =>
+    const matchedTarget = siteSearchTargets.find((target) =>
       target.label.toLowerCase().includes(query) ||
       target.keywords.some((keyword) => keyword.includes(query)),
     )
@@ -497,16 +584,7 @@ function App() {
       return
     }
 
-    const sectionNode = document.getElementById(matchedTarget.id)
-    if (!sectionNode) {
-      setSearchFeedback('Section exists in menu but not found on page.')
-      return
-    }
-
-    sectionNode.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    sectionNode.focus()
-    setSearchFeedback(`Showing: ${matchedTarget.label}`)
-    setMobileMenuOpen(false)
+    openSection(matchedTarget.id, matchedTarget.label)
   }
 
   // Route guards wait for Firebase to report the current user before redirecting.
@@ -531,6 +609,17 @@ function App() {
       onFieldChange={handleAuthFieldChange}
       onSubmit={handleAuthSubmit}
     />
+  )
+
+  const adminPage = isAdmin ? (
+    // /admin renders the structured Firestore editor. Saving here updates the same
+    // content object later rendered by /home and passed into the chatbot knowledge.
+    <AdminPanel
+      onLogout={handleLogout}
+      userEmail={currentUser?.email || ''}
+    />
+  ) : (
+    <Navigate to="/home" replace />
   )
 
   // Current use: render the branded one-page member experience after authentication.
@@ -588,7 +677,7 @@ function App() {
             </form>
 
             <ul className="hidden items-center gap-1 rounded-full border border-slate-600/70 bg-slate-900 p-1 text-sm font-medium lg:flex">
-              {navItems.map((item) => (
+              {siteNavItems.map((item) => (
                 <li key={item.label}>
                   <a
                     href={item.href}
@@ -609,6 +698,14 @@ function App() {
                   {homeVisitorLabel}
                 </p>
               </div>
+              {isAdmin && (
+                <button
+                  onClick={() => navigate('/admin')}
+                  className="rounded-full border border-cyan-300/35 bg-slate-900/80 px-5 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/10"
+                >
+                  Admin
+                </button>
+              )}
               <button
                 onClick={handleLogout}
                 className="rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-5 py-2 text-sm font-semibold text-slate-950 shadow-lg shadow-cyan-900/40 transition hover:brightness-110"
@@ -639,7 +736,7 @@ function App() {
                   </button>
                 </form>
                 <ul className="space-y-2 text-sm font-medium text-slate-200">
-                  {navItems.map((item) => (
+                  {siteNavItems.map((item) => (
                     <li key={item.label}>
                       <a
                         href={item.href}
@@ -659,6 +756,17 @@ function App() {
                     {homeVisitorLabel}
                   </p>
                 </div>
+                {isAdmin && (
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false)
+                      navigate('/admin')
+                    }}
+                    className="mt-3 w-full rounded-full border border-cyan-300/35 bg-slate-950/80 px-4 py-2 text-sm font-semibold text-cyan-100"
+                  >
+                    Admin
+                  </button>
+                )}
                 <button
                   onClick={handleLogout}
                   className="mt-3 w-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-4 py-2 text-sm font-semibold text-slate-950"
@@ -686,32 +794,24 @@ function App() {
               <span className="inline-flex h-2.5 w-2.5 rounded-full bg-cyan-300 shadow-[0_0_14px_rgba(103,232,249,0.95)]" />
               {homeVisitorLabel}
             </div>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-300">About CITS</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-300">{about.kicker}</p>
             <h1 className="max-w-4xl text-4xl font-black leading-tight text-white sm:text-5xl lg:text-7xl">
-              More than teaching skills, we build futures.
+              {about.title}
             </h1>
-            <p className="max-w-4xl text-base leading-8 text-slate-200 sm:text-lg">
-              In 2025, two friends attended a job interview with great hopes, but they were rejected.
-              That day became a turning point in their lives. With empty pockets, hunger, and sleepless nights,
-              they struggled without stable jobs or income.
-            </p>
-            <p className="max-w-4xl text-base leading-8 text-slate-300 sm:text-lg">
-              Instead of giving up, they transformed that struggle into a powerful idea:
-              Connectints, built to create opportunities and support others in building careers.
-              Today, CITS is growing as an EdTech community built by dreamers across India.
-            </p>
-            <p className="max-w-4xl text-base leading-8 text-slate-300 sm:text-lg">
-              Along with MSME registration, CITS also carries AICTE approval, ISO 21001:2018,
-              and Start-up India recognition.
-            </p>
+            {about.paragraphs.map((paragraph, index) => (
+              <p key={`about-${index}`} className={`max-w-4xl text-base leading-8 sm:text-lg ${index === 0 ? 'text-slate-200' : 'text-slate-300'}`}>
+                {paragraph}
+              </p>
+            ))}
             <div className="flex flex-wrap gap-3 text-xs text-slate-200 sm:text-sm">
-              <span data-reveal className="reveal delay-3 rounded-full border border-amber-400/70 px-4 py-2">AICTE Approved</span>
-              <span data-reveal className="reveal delay-4 rounded-full border border-amber-400/70 px-4 py-2">ISO 21001:2018</span>
-              <span data-reveal className="reveal delay-5 rounded-full border border-amber-400/70 px-4 py-2">Start-up India</span>
-              <span data-reveal className="reveal delay-6 rounded-full border border-amber-400/70 px-4 py-2">MSME Registered</span>
+              {about.approvals.map((approval, index) => (
+                <span key={approval} data-reveal className={`reveal ${index % 4 === 0 ? 'delay-3' : index % 4 === 1 ? 'delay-4' : index % 4 === 2 ? 'delay-5' : 'delay-6'} rounded-full border border-amber-400/70 px-4 py-2`}>
+                  {approval}
+                </span>
+              ))}
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {impactStats.map((item) => (
+              {siteImpactStats.map((item) => (
                 <div key={item.label} className="rounded-xl border border-slate-700/80 bg-slate-900/50 p-4">
                   <p className="text-xl font-black text-cyan-300">{item.value}</p>
                   <p className="mt-1 text-sm text-slate-200">{item.label}</p>
@@ -729,92 +829,47 @@ function App() {
         >
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">Leadership</p>
           <h3 className="mt-2 text-2xl font-bold text-white">Founder &amp; Co-Founder</h3>
-          <p className="mt-3 max-w-3xl text-slate-300">
-            The ideologies behind CITS are shaped by resilience, practical thinking,
-            and the mission to reduce unemployment through skill-first training.
-          </p>
+          <p className="mt-3 max-w-3xl text-slate-300">{about.leadershipIntro}</p>
           <div className="mt-6 grid gap-6 md:grid-cols-2">
-            <article
-              data-reveal
-              className="reveal delay-4 overflow-hidden rounded-xl border border-slate-700 bg-slate-950/70"
-            >
-              <img
-                src="/images/tharun.png"
-                alt="Tharun Kumar"
-                className="h-72 w-full object-cover object-top sm:h-80"
-              />
-              <div className="space-y-2 p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">
-                  Founder &amp; CEO
-                </p>
-                <h4 className="text-xl font-bold text-white">Tharun Kumar</h4>
-                <div className="mt-3 grid gap-2 rounded-lg border border-cyan-500/30 bg-cyan-500/10 p-3 text-sm text-cyan-100">
-                  <p><span className="font-semibold text-cyan-300">Education:</span> B.Tech in Computer Science Engineering</p>
-                  <p><span className="font-semibold text-cyan-300">Specialization:</span> Storytelling, mentorship, employability strategy, and real-world execution</p>
+            {leadershipMembers.map((member, index) => (
+              <article
+                key={`${member.name}-${index}`}
+                data-reveal
+                className={`reveal ${index % 2 === 0 ? 'delay-4' : 'delay-5'} overflow-hidden rounded-xl border border-slate-700 bg-slate-950/70`}
+              >
+                <img
+                  src={member.image || '/images/tharun.png'}
+                  alt={member.alt || member.name}
+                  className="h-72 w-full object-cover object-top sm:h-80"
+                />
+                <div className="space-y-2 p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">
+                    {member.roleLabel}
+                  </p>
+                  <h4 className="text-xl font-bold text-white">{member.name}</h4>
+                  <div className="mt-3 grid gap-2 rounded-lg border border-cyan-500/30 bg-cyan-500/10 p-3 text-sm text-cyan-100">
+                    <p><span className="font-semibold text-cyan-300">Education:</span> {member.education}</p>
+                    <p><span className="font-semibold text-cyan-300">Specialization:</span> {member.specialization}</p>
+                  </div>
+                  <p className="text-sm leading-7 text-slate-200">{member.description}</p>
+                  <p className="text-sm italic text-cyan-200">"{member.quote}"</p>
+                  {member.instagramUrl && (
+                    <p className="pt-1 text-sm">
+                      <a
+                        className="inline-flex items-center rounded-full border border-cyan-400/40 bg-cyan-500/10 p-2 text-cyan-300 transition hover:bg-cyan-500/20"
+                        href={member.instagramUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={`${member.name} Instagram`}
+                        title={`${member.name} Instagram`}
+                      >
+                        <InstagramIcon className="h-5 w-5" />
+                      </a>
+                    </p>
+                  )}
                 </div>
-                <p className="text-sm leading-7 text-slate-200">
-                  More than a CEO, Tharun wears many hats: a farmer connected to his roots, a filmmaker and
-                  storyteller, a scriptwriter and director, a psychologist who understands people, and a corporate
-                  professional who values real-world experience.
-                </p>
-                <p className="text-sm italic text-cyan-200">
-                  "I was born in hunger, and I don&apos;t want to see anyone suffer from it."
-                </p>
-                <p className="pt-1 text-sm">
-                  <a
-                    className="inline-flex items-center rounded-full border border-cyan-400/40 bg-cyan-500/10 p-2 text-cyan-300 transition hover:bg-cyan-500/20"
-                    href="https://www.instagram.com/tharun_sparkss?igsh=MXA3bDl0NnNpNGx2Yw=="
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label="Founder Instagram"
-                    title="Founder Instagram"
-                  >
-                    <InstagramIcon className="h-5 w-5" />
-                  </a>
-                </p>
-              </div>
-            </article>
-
-            <article
-              data-reveal
-              className="reveal delay-5 overflow-hidden rounded-xl border border-slate-700 bg-slate-950/70"
-            >
-              <img
-                src="/images/surya.jpg"
-                alt="Jyothi Prasad Surya"
-                className="h-72 w-full object-cover object-top sm:h-80"
-              />
-              <div className="space-y-2 p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">
-                  Co-Founder &amp; CTO
-                </p>
-                <h4 className="text-xl font-bold text-white">Jyothi Prasad Surya</h4>
-                <div className="mt-3 grid gap-2 rounded-lg border border-cyan-500/30 bg-cyan-500/10 p-3 text-sm text-cyan-100">
-                  <p><span className="font-semibold text-cyan-300">Education:</span> Engineering background in technology and systems</p>
-                  <p><span className="font-semibold text-cyan-300">Specialization:</span> Program design, technical strategy, and leadership support systems</p>
-                </div>
-                <p className="text-sm leading-7 text-slate-200">
-                  Surya, son of a hardworking food vendor, played a significant role in shaping Tharun&apos;s journey.
-                  His encouragement, ideas, and sleepless brainstorming sessions helped transform intent into
-                  initiatives focused on reaching and helping people.
-                </p>
-                <p className="text-sm italic text-cyan-200">
-                  "More than our own lives, we often spoke about the growing issue of unemployment."
-                </p>
-                <p className="pt-1 text-sm">
-                  <a
-                    className="inline-flex items-center rounded-full border border-cyan-400/40 bg-cyan-500/10 p-2 text-cyan-300 transition hover:bg-cyan-500/20"
-                    href="https://www.instagram.com/sj__surya_?igsh=MTZ1aWJsMWdxa2o5aA=="
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label="Co-Founder Instagram"
-                    title="Co-Founder Instagram"
-                  >
-                    <InstagramIcon className="h-5 w-5" />
-                  </a>
-                </p>
-              </div>
-            </article>
+              </article>
+            ))}
           </div>
         </section>
 
@@ -830,7 +885,7 @@ function App() {
             Each track is designed with structured curriculum, projects, and placement guidance.
           </p>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            {courses.map((course, index) => (
+            {siteCourses.map((course, index) => (
               <div
                 key={course.title}
                 data-reveal
@@ -848,7 +903,7 @@ function App() {
                   <p className="mt-1 text-2xl font-black text-cyan-300">Rs {course.fee}</p>
                   <p className="mt-2 text-lg font-semibold text-white">{course.title}</p>
                   <div className="mt-4 space-y-2">
-                    {courseIncludes.map((item) => (
+                    {siteCourseIncludes.map((item) => (
                       <p key={`${course.title}-${item}`} className="text-sm text-slate-300">
                         - {item}
                       </p>
@@ -895,7 +950,7 @@ function App() {
             </svg>
 
             <div className="relative z-10 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-              {roadmapSteps.map((step, index) => (
+              {siteRoadmapSteps.map((step, index) => (
                 <article
                   key={step.number}
                   className="roadmap-step rounded-xl border border-slate-700/70 bg-slate-900/80 p-4"
@@ -929,7 +984,7 @@ function App() {
             New batch dates will be announced soon. Contact us to receive priority updates for ServiceNow and Incident Management tracks.
           </p>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            {upcomingBatches.map((batch) => (
+            {siteUpcomingBatches.map((batch) => (
               <article key={batch.track} className="rounded-xl border border-slate-700 bg-slate-950/60 p-4">
                 <h3 className="text-lg font-semibold text-white">{batch.track}</h3>
                 <p className="mt-2 text-sm text-slate-300">Mode: {batch.mode}</p>
@@ -951,7 +1006,7 @@ function App() {
             Showcase student success stories here. These cards are ready for posting new placement updates.
           </p>
           <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {placedStudents.map((student, index) => (
+            {sitePlacedStudents.map((student, index) => (
               <article
                 key={`${student.name}-${student.company}`}
                 data-reveal
@@ -992,9 +1047,9 @@ function App() {
           data-reveal
           className="reveal delay-6 rounded-2xl border border-emerald-400/35 bg-gradient-to-r from-emerald-500/15 via-cyan-500/10 to-sky-500/15 p-5 sm:p-6"
         >
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">Referral Program</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">{referralBanner.kicker}</p>
           <p className="mt-2 text-lg font-semibold text-slate-100">
-            Refer Friends. Help Them Learn. Earn Rewards with CITS.
+            {referralBanner.text}
           </p>
         </section>
 
@@ -1010,7 +1065,7 @@ function App() {
             Share your certificate ID with our team by email to confirm authenticity and course completion records.
           </p>
           <div className="mt-5 space-y-3">
-            {verificationSteps.map((step, index) => (
+            {siteVerificationSteps.map((step, index) => (
               <div key={step} className="rounded-lg border border-slate-700 bg-slate-950/60 p-4 text-slate-200">
                 <p className="text-sm">
                   <span className="mr-2 font-semibold text-cyan-300">Step {index + 1}:</span>
@@ -1033,7 +1088,7 @@ function App() {
             Blog posts are being prepared to cover interview strategies, industry trends, and practical career guidance.
           </p>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
-            {blogPreviews.map((post) => (
+            {siteBlogPreviews.map((post) => (
               <article key={post.title} className="rounded-xl border border-slate-700 bg-slate-950/60 p-4">
                 <h3 className="text-base font-semibold text-white">{post.title}</h3>
                 <p className="mt-2 text-sm leading-6 text-slate-300">{post.summary}</p>
@@ -1060,18 +1115,17 @@ function App() {
                 />
               </a>
               <p className="mt-4 max-w-md text-sm leading-7 text-slate-300">
-                Career-first learning platform focused on practical skills, interview readiness,
-                and job outcomes through mentor-led training.
+                {footer.brandCopy}
               </p>
               <div className="mt-4 inline-flex rounded-full border border-cyan-400/30 bg-slate-900/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200">
-                More than teaching skills, we build futures
+                {footer.badgeText}
               </div>
             </div>
 
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.18em] text-cyan-300">Quick Links</p>
               <ul className="mt-4 space-y-3">
-                {navItems.map((item) => (
+                {siteNavItems.map((item) => (
                   <li key={`footer-${item.label}`}>
                     <a
                       href={item.href}
@@ -1089,27 +1143,27 @@ function App() {
               <div className="mt-4 space-y-3 text-sm text-slate-300">
                 <p>
                   Email:{' '}
-                  <a className="font-semibold text-cyan-200 hover:underline" href="mailto:connectints1@gmail.com">
-                    connectints1@gmail.com
+                  <a className="font-semibold text-cyan-200 hover:underline" href={`mailto:${contactEmail}`}>
+                    {contactEmail}
                   </a>
                 </p>
                 <p>
                   Phone:{' '}
-                  <a className="font-semibold text-cyan-200 hover:underline" href="tel:+916303545755">
-                    +91 6303545755
+                  <a className="font-semibold text-cyan-200 hover:underline" href={`tel:${primaryPhone.replace(/\s+/g, '')}`}>
+                    {primaryPhone}
                   </a>
                 </p>
                 <p>
                   Alternate Phone:{' '}
-                  <a className="font-semibold text-cyan-200 hover:underline" href="tel:+918247097984">
-                    +91 8247097984
+                  <a className="font-semibold text-cyan-200 hover:underline" href={`tel:${alternatePhone.replace(/\s+/g, '')}`}>
+                    {alternatePhone}
                   </a>
                 </p>
                 <p className="flex items-center gap-3">
                   <span>Founder Insta:</span>
                   <a
                     className="inline-flex items-center rounded-full border border-cyan-400/40 bg-cyan-500/10 p-2 text-cyan-200 transition hover:bg-cyan-500/20"
-                    href="https://www.instagram.com/tharun_sparkss?igsh=MXA3bDl0NnNpNGx2Yw=="
+                    href={leadershipMembers[0]?.instagramUrl || 'https://www.instagram.com/tharun_sparkss?igsh=MXA3bDl0NnNpNGx2Yw=='}
                     target="_blank"
                     rel="noreferrer"
                     aria-label="Founder Instagram"
@@ -1122,7 +1176,7 @@ function App() {
                   <span>Co-Founder Insta:</span>
                   <a
                     className="inline-flex items-center rounded-full border border-cyan-400/40 bg-cyan-500/10 p-2 text-cyan-200 transition hover:bg-cyan-500/20"
-                    href="https://www.instagram.com/sj__surya_?igsh=MTZ1aWJsMWdxa2o5aA=="
+                    href={leadershipMembers[1]?.instagramUrl || 'https://www.instagram.com/sj__surya_?igsh=MTZ1aWJsMWdxa2o5aA=='}
                     target="_blank"
                     rel="noreferrer"
                     aria-label="Co-Founder Instagram"
@@ -1131,8 +1185,8 @@ function App() {
                     <InstagramIcon className="h-5 w-5" />
                   </a>
                 </p>
-                <p>Mon-Sat | 9:00 AM to 7:00 PM</p>
-                <p>Response Time: Usually within 24 hours for email queries.</p>
+                <p>{supportHours}</p>
+                <p>{footer.responseTimeNote}</p>
               </div>
               <a
                 href={`https://wa.me/${whatsappNumber}`}
@@ -1146,11 +1200,32 @@ function App() {
           </div>
 
           <div className="mt-8 flex flex-col gap-3 border-t border-slate-700/70 pt-5 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
-            <p>© {new Date().getFullYear()} CITS Connectints. All rights reserved.</p>
-            <p>Built for practical learning, verification, and placement outcomes.</p>
+            <p>© {new Date().getFullYear()} {footer.copyrightText}</p>
+            <p>{footer.builtForText}</p>
           </div>
         </footer>
       </main>
+
+      <ChatbotWidget
+        memberName={memberName}
+        knowledge={{
+          blogPreviews: siteBlogPreviews,
+          contact: {
+            alternatePhone,
+            email: contactEmail,
+            phone: primaryPhone,
+            supportHours,
+          },
+          courseIncludes: siteCourseIncludes,
+          courses: siteCourses,
+          impactStats: siteImpactStats,
+          placedStudents: sitePlacedStudents,
+          upcomingBatches: siteUpcomingBatches,
+          verificationSteps: siteVerificationSteps,
+          whatsappNumber,
+        }}
+        onNavigateToSection={openSection}
+      />
 
       {/* Floating WhatsApp shortcut stays visible for quick contact from any section. */}
       <a
@@ -1174,6 +1249,7 @@ function App() {
       <Route path="/login" element={accessMode ? <Navigate to="/home" replace /> : authPage} />
       <Route path="/signup" element={accessMode ? <Navigate to="/home" replace /> : authPage} />
       <Route path="/home" element={accessMode ? homePage : <Navigate to="/login" replace />} />
+      <Route path="/admin" element={accessMode ? adminPage : <Navigate to="/login" replace />} />
       <Route path="*" element={<Navigate to={accessMode ? '/home' : '/login'} replace />} />
     </Routes>
   )

@@ -1,3 +1,6 @@
+// Contact API controller.
+// Used by routes/contactRoutes.js for POST /api/contact.
+// Current implementation is a placeholder until a real DB/mail workflow is added.
 export function submitContact(req, res) {
   // Current behavior is intentionally minimal: validate input and echo it back.
   // Future production change: replace this with database persistence, spam protection,
