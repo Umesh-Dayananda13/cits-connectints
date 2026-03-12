@@ -1,6 +1,18 @@
 import { useEffect, useState } from 'react'
+import {
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+  updateProfile,
+} from 'firebase/auth'
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import AuthScreen from './components/AuthScreen'
 import './index.css'
+import { auth, firebaseConfigIssue, isFirebaseConfigured } from './firebase'
 
+// Current use: static course cards for the home page catalog.
+// Future production change: replace this array with CMS, backend, or Firestore content.
 const courses = [
   {
     fee: '69999',
@@ -18,6 +30,8 @@ const courses = [
   { fee: '34999', title: 'Incident Management', image: '/images/incident-management.png' },
 ]
 
+// Current use: hard-coded brand proof points in the About section.
+// Future production change: connect these values to verified reporting before publishing live metrics.
 const impactStats = [
   { label: 'Students Guided', value: '1000+' },
   { label: 'Live Sessions', value: '250+' },
@@ -25,6 +39,8 @@ const impactStats = [
   { label: 'Industry Projects', value: 'Real Case Studies' },
 ]
 
+// Current use: shared bullet copy under every course card.
+// Future production change: move this into each course record if different tracks need different benefits.
 const courseIncludes = [
   'Live instructor-led classes',
   'Interview preparation with mock rounds',
@@ -32,6 +48,8 @@ const courseIncludes = [
   'Hands-on assignments with feedback',
 ]
 
+// Current use: placeholder batch information for the upcoming-batches section.
+// Future production change: replace with real batch schedules, dates, and enrollment status.
 const upcomingBatches = [
   { track: 'Oracle EBS by CITS', mode: 'Online Live', duration: '12 Weeks' },
   { track: 'Versant Mock Test Practice by CITS', mode: 'Online Live', duration: '4 Weeks' },
@@ -40,12 +58,16 @@ const upcomingBatches = [
   { track: 'Incident Management', mode: 'Online Live', duration: '10 Weeks' },
 ]
 
+// Current use: manual certificate verification instructions.
+// Future production change: replace with an automated verification form or backend lookup flow.
 const verificationSteps = [
   'Send your certificate ID to connectints1@gmail.com',
   'Include your full name and course name in the email',
   'Our team validates your record and responds with confirmation',
 ]
 
+// Current use: placeholder blog cards to hold layout space.
+// Future production change: source these from a CMS, markdown pipeline, or backend blog API.
 const blogPreviews = [
   {
     title: 'How to Prepare for ServiceNow Interviews in 30 Days',
@@ -61,6 +83,8 @@ const blogPreviews = [
   },
 ]
 
+// Current use: static enrollment journey content for the roadmap section.
+// Future production change: keep this array as the single edit point if enrollment steps or channels change.
 const roadmapSteps = [
   {
     number: '1',
@@ -99,6 +123,8 @@ const roadmapSteps = [
   },
 ]
 
+// Current use: local placement showcase cards for social proof.
+// Future production change: connect this to approved placement records with optional filtering by course/batch.
 const placedStudents = [
   {
     name: 'S Gowtham',
@@ -129,6 +155,8 @@ const placedStudents = [
   },
 ]
 
+// Current use: one-page navigation and footer quick links.
+// Future production change: keep section IDs in sync here if routes or section names change.
 const navItems = [
   { label: 'Courses', href: '#courses' },
   { label: 'About Us', href: '#about-us' },
@@ -141,12 +169,16 @@ const navItems = [
 ]
 
 const whatsappNumber = '916303545755'
+
+// Small reusable icon component for founder and company social links.
 const InstagramIcon = ({ className = 'h-4 w-4' }) => (
   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
     <path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2Zm8.5 1.5h-8.5A4.25 4.25 0 0 0 3.5 7.75v8.5a4.25 4.25 0 0 0 4.25 4.25h8.5a4.25 4.25 0 0 0 4.25-4.25v-8.5a4.25 4.25 0 0 0-4.25-4.25ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 1.5A3.5 3.5 0 1 0 12 15.5 3.5 3.5 0 0 0 12 8.5Zm5.25-.88a1.12 1.12 0 1 1 0 2.24 1.12 1.12 0 0 1 0-2.24Z" />
   </svg>
 )
 
+// Current use: lightweight client-side search that jumps to page sections.
+// Future production change: extend keywords here or swap to a real search index without changing the UI.
 const searchTargets = [
   { id: 'courses', label: 'Courses', keywords: ['course', 'servicenow', 'oracle', 'versant', 'incident', 'quality', 'qa', 'quality analyst'] },
   { id: 'about-us', label: 'About Us', keywords: ['about', 'cits', 'story', 'mission'] },
@@ -158,19 +190,228 @@ const searchTargets = [
   { id: 'blogs', label: 'Blogs', keywords: ['blog', 'insights', 'career'] },
 ]
 
+// Current use: translate Firebase Auth errors into user-facing copy.
+// Future production change: centralize this with localization if the app adds more auth providers or languages.
+const firebaseAuthMessages = {
+  'auth/email-already-in-use': 'This email is already in use.',
+  'auth/invalid-credential': 'Email or password is incorrect.',
+  'auth/invalid-email': 'Enter a valid email address.',
+  'auth/network-request-failed': 'Network error. Check your connection and try again.',
+  'auth/too-many-requests': 'Too many attempts. Try again later.',
+  'auth/weak-password': 'Password must be at least 6 characters.',
+}
+
+// Keep message mapping separate so auth handlers stay focused on control flow.
+const getFirebaseAuthMessage = (error) => (
+  firebaseAuthMessages[error?.code] || 'Authentication failed. Please try again.'
+)
+
+// Normalize names derived from email prefixes until richer member profiles exist.
+const formatMemberName = (value) => (
+  value
+    .split(/[\s._-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
+)
+
+// Current use: derive a friendly greeting for the navbar and hero.
+// Future production change: prefer backend or profile-stored names when member records become richer.
+const getMemberName = (user) => {
+  const displayName = user?.displayName?.trim()
+  if (displayName) return displayName
+
+  const emailPrefix = user?.email?.split('@')[0]?.trim()
+  return emailPrefix ? formatMemberName(emailPrefix) : 'Member'
+}
+
+// Reused loader for auth gating and protected home entry.
+// Future production change: this is the place to connect branded loading states or skeletons.
+function LoadingScreen({ label, detail }) {
+  return (
+    <div className="loader-screen">
+      <div className="loader-orbit" aria-hidden="true">
+        <span className="loader-ring loader-ring-outer" />
+        <span className="loader-ring loader-ring-middle" />
+        <span className="loader-ring loader-ring-inner" />
+        <span className="loader-core" />
+        <span className="loader-dot loader-dot-one" />
+        <span className="loader-dot loader-dot-two" />
+      </div>
+      <div className="loader-copy">
+        <p className="loader-text">{label}</p>
+        <p className="loader-detail">{detail}</p>
+      </div>
+    </div>
+  )
+}
+
+
 function App() {
+  // Signed-in users come from Firebase auth state.
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [accessMode, setAccessMode] = useState('')
+  // Keep auth form state in this parent so AuthScreen remains a pure UI component.
+  // Future production change: add fields for MFA, profile metadata, invite codes, or terms here.
+  const [authForm, setAuthForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  })
+  const [authError, setAuthError] = useState('')
+  const [authMessage, setAuthMessage] = useState('')
+  const [isAuthReady, setIsAuthReady] = useState(!isFirebaseConfigured)
+  const [isAuthBusy, setIsAuthBusy] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [memberName, setMemberName] = useState('')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchFeedback, setSearchFeedback] = useState('')
+  // Current routing keeps auth on /login and /signup, with the protected site on /home.
+  // Future production change: expand this route-driven mode if onboarding or member dashboards split out.
+  const authMode = location.pathname === '/signup' ? 'signup' : 'signin'
+  const homeAccessLabel = 'Member Access'
+  const homeVisitorLabel = `Welcome, ${memberName || 'Member'}`
 
+  // Firebase becomes the source of truth for signed-in users after configuration is present.
+  // Future production change: fetch roles, profile data, or onboarding status in this callback.
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1100)
+    if (!auth || !isFirebaseConfigured) {
+      setIsAuthReady(true)
+      return undefined
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setAccessMode('member')
+        setMemberName(getMemberName(user))
+      } else {
+        setAccessMode('')
+        setMemberName('')
+      }
+
+      setIsAuthReady(true)
+    })
+
+    return unsubscribe
+  }, [])
+
+  // Keep field editing local so the auth form feels responsive before any network request is made.
+  const handleAuthFieldChange = (event) => {
+    const { name, value } = event.target
+    setAuthForm((prev) => ({ ...prev, [name]: value }))
+    if (authError) setAuthError('')
+    if (authMessage) setAuthMessage('')
+  }
+
+  // Current production scope is email/password auth.
+  // Future production change: add provider sign-in, email verification, or MFA from this handler
+  // so all auth side effects continue living in one place.
+  const handleAuthSubmit = async (event) => {
+    event.preventDefault()
+
+    const email = authForm.email.trim()
+    const password = authForm.password.trim()
+
+    if (!email || !password) {
+      setAuthError('Email and password are required.')
+      return
+    }
+
+    if (!auth || !isFirebaseConfigured) {
+      setAuthError(firebaseConfigIssue || 'Firebase is not configured.')
+      return
+    }
+
+    if (authMode === 'signup') {
+      if (!authForm.name.trim()) {
+        setAuthError('Full name is required.')
+        return
+      }
+
+      if (password.length < 6) {
+        setAuthError('Password must be at least 6 characters.')
+        return
+      }
+
+      if (password !== authForm.confirmPassword.trim()) {
+        setAuthError('Passwords do not match.')
+        return
+      }
+    }
+
+    setIsAuthBusy(true)
+    setAuthError('')
+    setAuthMessage('')
+
+    try {
+      if (authMode === 'signup') {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+        const trimmedName = authForm.name.trim()
+        // For now we only persist a display name in Firebase Auth.
+        // Future production profiles can extend this step with Firestore or backend persistence.
+        await updateProfile(userCredential.user, { displayName: trimmedName })
+        setMemberName(trimmedName)
+        setAuthMessage('Account created. Opening the main website.')
+      } else {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password)
+        setMemberName(getMemberName(userCredential.user))
+        setAuthMessage('Sign-in successful. Opening the main website.')
+      }
+
+      setAccessMode('member')
+      navigate('/home')
+    } catch (error) {
+      setAuthError(getFirebaseAuthMessage(error))
+    } finally {
+      setIsAuthBusy(false)
+    }
+  }
+
+  // Route changes keep the visible auth tab aligned with the URL.
+  // Future production change: extend this handler if extra auth routes such as forgot-password are added.
+  const handleAuthModeChange = (mode) => {
+    if (isAuthBusy) return
+
+    setAuthError('')
+    setAuthMessage('')
+    navigate(mode === 'signup' ? '/signup' : '/login')
+  }
+
+  // Logout resets local UI state first, then ends the Firebase session if one exists.
+  // Future production change: clear cached profile/role data here as more member data is added.
+  const handleLogout = async () => {
+    setAccessMode('')
+    setMemberName('')
+    setAuthError('')
+    setAuthMessage('')
+    setAuthForm({ name: '', email: '', password: '', confirmPassword: '' })
+    setMobileMenuOpen(false)
+
+    if (auth && accessMode === 'member') {
+      try {
+        await signOut(auth)
+      } catch (error) {
+        console.error('Firebase sign-out failed', error)
+      }
+    }
+
+    navigate('/login')
+  }
+
+  // Current use: short branded loading delay before the protected home page appears.
+  // Future production change: remove or shorten this if real data loading replaces the staged reveal.
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 720)
     return () => clearTimeout(timer)
   }, [])
 
+  // Current use: home-page entrance animation for static sections.
+  // Future production change: replace direct DOM queries with component-level refs if this page becomes more dynamic.
   useEffect(() => {
-    if (isLoading) return
+    if (isLoading || !accessMode || location.pathname !== '/home') return
 
     const nodes = document.querySelectorAll('[data-reveal]')
     if (!nodes.length) return
@@ -200,7 +441,7 @@ function App() {
 
     nodes.forEach((node) => observer.observe(node))
 
-    // Failsafe: if observer misses any node, force visibility.
+    // Failsafe: if observer misses any node, force visibility anyway.
     const visibilityFallback = setTimeout(() => {
       nodes.forEach((node) => node.classList.add('is-visible'))
     }, 1800)
@@ -209,10 +450,12 @@ function App() {
       clearTimeout(visibilityFallback)
       observer.disconnect()
     }
-  }, [isLoading])
+  }, [accessMode, isLoading, location.pathname])
 
+  // Current use: make section jumps more obvious after navbar search or keyboard focus.
+  // Future production change: revisit this if the page moves from one long route to multiple routed pages.
   useEffect(() => {
-    if (isLoading) return
+    if (isLoading || !accessMode || location.pathname !== '/home') return
 
     const sectionNodes = Array.from(document.querySelectorAll('main > section'))
     const cleanupHandlers = []
@@ -231,23 +474,10 @@ function App() {
     return () => {
       cleanupHandlers.forEach((cleanup) => cleanup())
     }
-  }, [isLoading])
+  }, [accessMode, isLoading, location.pathname])
 
-  if (isLoading) {
-    return (
-      <div className="loader-screen">
-        <div className="loader-bars" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-          <span />
-          <span />
-        </div>
-        <p className="loader-text">Loading CITS Experience</p>
-      </div>
-    )
-  }
-
+  // Current use: keyword-to-section scrolling for the single-page home layout.
+  // Future production change: replace with routed search results if content stops living on one page.
   const handleSearch = (event) => {
     event.preventDefault()
     const query = searchQuery.trim().toLowerCase()
@@ -279,9 +509,41 @@ function App() {
     setMobileMenuOpen(false)
   }
 
-  return (
+  // Route guards wait for Firebase to report the current user before redirecting.
+  if (!isAuthReady) {
+    return (
+      <LoadingScreen
+        label="Checking Access"
+        detail="Validating your Firebase session and preparing secure entry."
+      />
+    )
+  }
+
+  // AuthScreen stays presentational, while this parent owns behavior and navigation.
+  const authPage = (
+    <AuthScreen
+      authMode={authMode}
+      authForm={authForm}
+      authError={authError}
+      authMessage={authMessage}
+      isAuthBusy={isAuthBusy}
+      onChangeMode={handleAuthModeChange}
+      onFieldChange={handleAuthFieldChange}
+      onSubmit={handleAuthSubmit}
+    />
+  )
+
+  // Current use: render the branded one-page member experience after authentication.
+  // Future production change: split this into smaller route components if the site grows beyond one long page.
+  const homePage = isLoading ? (
+    <LoadingScreen
+      label="Loading CITS Experience"
+      detail="Bringing in your dashboard, learning tracks, and placement content."
+    />
+  ) : (
     <div className="page-enter min-h-screen bg-slate-950 text-slate-100">
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+        {/* Sticky header keeps navigation, search, and logout available on long pages. */}
         <header
           className="site-navbar sticky top-2 z-50 overflow-hidden rounded-2xl border border-cyan-300/25 bg-slate-950 text-slate-100"
         >
@@ -338,11 +600,25 @@ function App() {
               ))}
             </ul>
 
-            <button className="hidden rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-5 py-2 text-sm font-semibold text-slate-950 shadow-lg shadow-cyan-900/40 transition hover:brightness-110 lg:block">
-              Get Started
-            </button>
+            <div className="ml-auto hidden items-center gap-3 lg:flex">
+              <div className="rounded-2xl border border-slate-600/80 bg-slate-900/80 px-4 py-2">
+                <p className="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-cyan-200">
+                  {homeAccessLabel}
+                </p>
+                <p className="mt-1 text-sm font-semibold text-white">
+                  {homeVisitorLabel}
+                </p>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-5 py-2 text-sm font-semibold text-slate-950 shadow-lg shadow-cyan-900/40 transition hover:brightness-110"
+              >
+                Logout
+              </button>
+            </div>
 
             {mobileMenuOpen && (
+              // Mobile nav mirrors the desktop controls in a stacked layout.
               <div
                 id="mobile-nav"
                 className="order-4 mt-2 w-full rounded-2xl border border-slate-600/80 bg-slate-900 p-3 lg:hidden"
@@ -375,8 +651,19 @@ function App() {
                     </li>
                   ))}
                 </ul>
-                <button className="mt-3 w-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-4 py-2 text-sm font-semibold text-slate-950">
-                  Get Started
+                <div className="mt-3 rounded-2xl border border-slate-600/80 bg-slate-950/80 px-4 py-3">
+                  <p className="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-cyan-200">
+                    {homeAccessLabel}
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-white">
+                    {homeVisitorLabel}
+                  </p>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="mt-3 w-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-4 py-2 text-sm font-semibold text-slate-950"
+                >
+                  Logout
                 </button>
               </div>
             )}
@@ -388,12 +675,17 @@ function App() {
           )}
         </header>
 
+        {/* Brand story and approvals establish trust before users browse offerings. */}
         <section
           id="about-us"
           data-reveal
           className="reveal delay-2 overflow-hidden rounded-3xl border border-slate-700/60 bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950/80 shadow-2xl shadow-cyan-900/20"
         >
           <div className="space-y-6 p-6 sm:p-8 lg:p-12">
+            <div className="inline-flex items-center gap-3 rounded-full border border-cyan-400/25 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-100">
+              <span className="inline-flex h-2.5 w-2.5 rounded-full bg-cyan-300 shadow-[0_0_14px_rgba(103,232,249,0.95)]" />
+              {homeVisitorLabel}
+            </div>
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-300">About CITS</p>
             <h1 className="max-w-4xl text-4xl font-black leading-tight text-white sm:text-5xl lg:text-7xl">
               More than teaching skills, we build futures.
@@ -429,6 +721,7 @@ function App() {
           </div>
         </section>
 
+        {/* Leadership cards explain who founded CITS and the mission behind it. */}
         <section
           id="leadership"
           data-reveal
@@ -525,6 +818,7 @@ function App() {
           </div>
         </section>
 
+        {/* Course catalog showcases the current learning tracks and what each includes. */}
         <section
           id="courses"
           data-reveal
@@ -569,6 +863,7 @@ function App() {
           </div>
         </section>
 
+        {/* Enrollment roadmap turns the sign-up journey into a visual step-by-step guide. */}
         <section
           id="roadmap"
           data-reveal
@@ -622,6 +917,7 @@ function App() {
           </div>
         </section>
 
+        {/* Batch cards highlight upcoming learning windows for each course track. */}
         <section
           id="upcoming-batches"
           data-reveal
@@ -643,6 +939,7 @@ function App() {
           </div>
         </section>
 
+        {/* Placement cards give social proof through learner success stories. */}
         <section
           id="placed-students"
           data-reveal
@@ -690,6 +987,7 @@ function App() {
           </div>
         </section>
 
+        {/* Referral banner adds a short conversion-focused callout between content sections. */}
         <section
           data-reveal
           className="reveal delay-6 rounded-2xl border border-emerald-400/35 bg-gradient-to-r from-emerald-500/15 via-cyan-500/10 to-sky-500/15 p-5 sm:p-6"
@@ -700,6 +998,7 @@ function App() {
           </p>
         </section>
 
+        {/* Certificate section explains the current manual validation process. */}
         <section
           id="verify-certificate"
           data-reveal
@@ -722,6 +1021,7 @@ function App() {
           </div>
         </section>
 
+        {/* Blog cards reserve space for future publishing and career content. */}
         <section
           id="blogs"
           data-reveal
@@ -742,6 +1042,7 @@ function App() {
           </div>
         </section>
 
+        {/* Footer consolidates contact details, quick links, and the brand message. */}
         <footer
           data-reveal
           className="reveal delay-6 overflow-hidden rounded-3xl border border-cyan-400/25 bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950/70 p-6 shadow-2xl shadow-cyan-950/30 sm:p-8"
@@ -851,6 +1152,7 @@ function App() {
         </footer>
       </main>
 
+      {/* Floating WhatsApp shortcut stays visible for quick contact from any section. */}
       <a
         href={`https://wa.me/${whatsappNumber}`}
         target="_blank"
@@ -863,6 +1165,17 @@ function App() {
         </svg>
       </a>
     </div>
+  )
+
+  return (
+    // Router keeps login, signup, and home addressable in this preview app.
+    <Routes>
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/login" element={accessMode ? <Navigate to="/home" replace /> : authPage} />
+      <Route path="/signup" element={accessMode ? <Navigate to="/home" replace /> : authPage} />
+      <Route path="/home" element={accessMode ? homePage : <Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to={accessMode ? '/home' : '/login'} replace />} />
+    </Routes>
   )
 }
 

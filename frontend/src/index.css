@@ -18,6 +18,706 @@ body {
   background: radial-gradient(circle at top, #0f172a 0%, #020617 60%);
 }
 
+/* Current use: auth page shell and two-panel desktop layout.
+   Future production change: adjust sizing and atmosphere here before touching component markup. */
+.auth-entry {
+  background:
+    radial-gradient(circle at 14% 16%, rgba(244, 114, 182, 0.18), transparent 24%),
+    radial-gradient(circle at 82% 18%, rgba(56, 189, 248, 0.18), transparent 26%),
+    radial-gradient(circle at 50% 100%, rgba(15, 23, 42, 0.55), transparent 35%),
+    linear-gradient(145deg, #010811 0%, #051226 48%, #04142c 100%);
+  background-size: 180% 180%;
+  animation: authBgShift 18s ease-in-out infinite;
+  overflow: hidden;
+}
+
+.auth-entry-grid {
+  align-items: stretch;
+}
+
+.auth-hero-panel {
+  display: flex;
+  height: calc(100vh - 1.5rem);
+  background:
+    linear-gradient(155deg, rgba(10, 15, 28, 0.95), rgba(15, 32, 52, 0.88)),
+    rgba(2, 6, 23, 0.9);
+  isolation: isolate;
+  box-shadow:
+    0 32px 80px rgba(2, 6, 23, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.auth-ambient {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(22px);
+  opacity: 0.75;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.auth-ambient-one {
+  top: -120px;
+  right: -50px;
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.34), transparent 66%);
+}
+
+.auth-ambient-two {
+  left: -60px;
+  bottom: -110px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(244, 114, 182, 0.24), transparent 68%);
+}
+
+.auth-grid-lines {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+  background-size: 26px 26px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.85), transparent);
+  pointer-events: none;
+}
+
+.auth-light-streak {
+  position: absolute;
+  inset: auto 12% 10% auto;
+  width: 240px;
+  height: 240px;
+  border-radius: 2.5rem;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.02)),
+    radial-gradient(circle at 20% 20%, rgba(103, 232, 249, 0.22), transparent 52%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transform: rotate(12deg);
+  box-shadow: 0 24px 50px rgba(8, 47, 73, 0.24);
+  pointer-events: none;
+  animation: authFloatCard 9s ease-in-out infinite;
+}
+
+.auth-hero-glow {
+  position: absolute;
+  inset: auto auto 6% 10%;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(244, 114, 182, 0.24), transparent 68%);
+  filter: blur(18px);
+  pointer-events: none;
+  animation: authPulse 6s ease-in-out infinite;
+}
+
+.auth-floating-dots {
+  position: absolute;
+  inset: 18% 6% auto 6%;
+  height: 180px;
+  background-image:
+    radial-gradient(rgba(103, 232, 249, 0.35) 1.5px, transparent 1.5px),
+    radial-gradient(rgba(244, 114, 182, 0.32) 1.3px, transparent 1.3px);
+  background-size: 48px 48px, 60px 60px;
+  background-position: 0 0, 12px 18px;
+  opacity: 0.35;
+  animation: authDotDrift 22s linear infinite;
+  pointer-events: none;
+}
+
+.auth-brand-badge {
+  background: rgba(8, 15, 29, 0.58);
+  backdrop-filter: blur(14px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.auth-brand-dot {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #67e8f9, #f472b6);
+  box-shadow: 0 0 0 6px rgba(103, 232, 249, 0.08);
+}
+
+.auth-kicker,
+.auth-copy,
+.auth-title,
+.auth-form-panel {
+  position: relative;
+  z-index: 1;
+}
+
+.auth-title {
+  text-wrap: balance;
+  letter-spacing: -0.055em;
+  font-size: clamp(2.9rem, 4.9vw, 5.5rem);
+}
+
+.auth-title-emphasis {
+  background: linear-gradient(90deg, #ffffff 0%, #e0f2fe 35%, #67e8f9 60%, #ffffff 100%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: authTitleSweep 6.5s ease-in-out infinite;
+}
+
+.auth-copy {
+  max-width: 42rem;
+}
+
+.auth-type-shell {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.8rem;
+  width: min(100%, 28rem);
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(103, 232, 249, 0.16);
+  border-radius: 1rem;
+  background: rgba(8, 15, 29, 0.56);
+  backdrop-filter: blur(14px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.auth-type-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #a5f3fc;
+  white-space: nowrap;
+}
+
+.auth-type-text {
+  min-width: 0;
+  min-height: 1.5rem;
+  font-size: clamp(0.94rem, 1.8vw, 1rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #f8fafc;
+}
+
+.auth-type-cursor {
+  width: 2px;
+  height: 1.1rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #67e8f9, #38bdf8);
+  box-shadow: 0 0 16px rgba(103, 232, 249, 0.38);
+  animation: authCursorBlink 1s steps(1) infinite;
+}
+
+.auth-hero-layout {
+  justify-content: flex-start;
+  gap: clamp(1.25rem, 2.2vw, 2rem);
+  min-height: 100%;
+}
+
+.auth-form-shell {
+  min-height: 0;
+  justify-content: space-between;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.35rem;
+  margin-right: -0.35rem;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(103, 232, 249, 0.35) transparent;
+}
+
+.auth-form-shell::-webkit-scrollbar {
+  width: 8px;
+}
+
+.auth-form-shell::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.auth-form-shell::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(103, 232, 249, 0.4), rgba(14, 165, 233, 0.28));
+}
+
+.auth-form-meta {
+  align-items: center;
+}
+
+.auth-form-copy h2,
+.auth-form-copy p {
+  max-width: 24rem;
+}
+
+/* Shared glass surfaces used across auth hero pills, cards, and the form shell.
+   Keep style changes here if the auth page needs a different production theme later. */
+.auth-surface-tag {
+  background: rgba(8, 15, 29, 0.5);
+  backdrop-filter: blur(14px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.auth-feature-shell,
+.auth-signal-card,
+.auth-graphic-panel,
+.auth-metric-card,
+.auth-feature-card,
+.auth-copy-item,
+.auth-step-row,
+.auth-signal-row,
+.auth-form-stage,
+.auth-toggle {
+  backdrop-filter: blur(16px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  background: rgba(6, 11, 23, 0.5);
+}
+
+.auth-metric-card {
+  transition: transform 220ms ease, border-color 220ms ease, background 220ms ease;
+}
+
+.auth-metric-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(125, 211, 252, 0.32);
+  background: rgba(10, 16, 31, 0.68);
+}
+
+.auth-stagger {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: authStagger 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.auth-stagger:nth-child(1) { animation-delay: 80ms; }
+.auth-stagger:nth-child(2) { animation-delay: 160ms; }
+.auth-stagger:nth-child(3) { animation-delay: 240ms; }
+
+.auth-feature-card,
+.auth-copy-item,
+.auth-step-row,
+.auth-signal-row {
+  transition: transform 220ms ease, border-color 220ms ease, background 220ms ease;
+}
+
+.auth-feature-card:hover,
+.auth-copy-item:hover,
+.auth-step-row:hover,
+.auth-signal-row:hover {
+  transform: translateY(-4px);
+  border-color: rgba(103, 232, 249, 0.32);
+  background: rgba(10, 16, 31, 0.68);
+}
+
+.auth-form-stage {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, rgba(5, 10, 22, 0.9), rgba(6, 12, 26, 0.82));
+}
+
+.auth-graphic-panel {
+  background: linear-gradient(145deg, rgba(7, 14, 29, 0.82), rgba(5, 18, 38, 0.78));
+}
+
+.auth-illustration-shell {
+  position: relative;
+  overflow: hidden;
+  min-height: 260px;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.14), transparent 42%),
+    radial-gradient(circle at 82% 18%, rgba(244, 114, 182, 0.14), transparent 40%),
+    linear-gradient(160deg, rgba(7, 13, 25, 0.92), rgba(6, 17, 33, 0.82));
+}
+
+.auth-illustration-badge {
+  position: absolute;
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(10, 17, 31, 0.82);
+  padding: 0.55rem 0.9rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #e2e8f0;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 12px 24px rgba(2, 6, 23, 0.24);
+}
+
+.auth-illustration-badge-top {
+  top: 16px;
+  left: 16px;
+}
+
+.auth-illustration-badge-bottom {
+  right: 18px;
+  bottom: 16px;
+}
+
+.auth-illustration-svg {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.auth-illustration-float {
+  transform-origin: center;
+  animation: authIllustrationFloat 7s ease-in-out infinite;
+}
+
+.auth-illustration-card {
+  transform-origin: center;
+  animation: authCardFloat 6.2s ease-in-out infinite;
+}
+
+.auth-illustration-card-delay {
+  animation-delay: 400ms;
+}
+
+.auth-illustration-line {
+  stroke-dasharray: 14 12;
+  animation: authLineTravel 9s linear infinite;
+}
+
+.auth-illustration-bar {
+  transform-origin: left center;
+  animation: authChartPulse 3.8s ease-in-out infinite;
+}
+
+.auth-illustration-bar-two {
+  animation-delay: 180ms;
+}
+
+.auth-illustration-bar-three {
+  animation-delay: 360ms;
+}
+
+.auth-illustration-orb {
+  animation: authOrbPulse 2.8s ease-in-out infinite;
+}
+
+.auth-illustration-orb-delay {
+  animation-delay: 220ms;
+}
+
+.auth-illustration-orb-slow {
+  animation-delay: 420ms;
+}
+
+.auth-step-index {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(8, 14, 27, 0.9));
+  box-shadow: 0 10px 24px rgba(2, 6, 23, 0.25);
+}
+
+/* Shared auth-panel entrance timing for the left hero and right form surfaces.
+   Future production change: tune this block first if the auth screen needs calmer or faster motion. */
+.auth-reveal-panel {
+  animation: authPanelRise 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.auth-reveal-panel-delay {
+  animation-delay: 120ms;
+}
+
+.auth-form-panel {
+  align-self: start;
+  height: calc(100vh - 1.5rem);
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 20% 15%, rgba(34, 211, 238, 0.12), transparent 55%),
+    radial-gradient(circle at 90% 20%, rgba(244, 114, 182, 0.1), transparent 60%),
+    linear-gradient(200deg, rgba(2, 6, 23, 0.96), rgba(8, 16, 32, 0.94));
+  box-shadow:
+    0 30px 70px rgba(2, 6, 23, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.auth-form-top {
+  flex-shrink: 0;
+}
+
+.auth-toggle {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+}
+
+.auth-trust-strip {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top left, rgba(16, 185, 129, 0.14), transparent 34%),
+    linear-gradient(145deg, rgba(5, 18, 19, 0.72), rgba(7, 18, 31, 0.88));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 18px 38px rgba(2, 6, 23, 0.2);
+}
+
+.auth-trust-strip::after {
+  content: "";
+  position: absolute;
+  inset: auto -14% -32% auto;
+  width: 180px;
+  height: 180px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.12), transparent 70%);
+  pointer-events: none;
+}
+
+.auth-trust-icon {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.14), rgba(6, 78, 59, 0.22));
+  box-shadow: 0 10px 28px rgba(5, 46, 22, 0.16);
+}
+
+.auth-form-stage {
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-form-stage::before {
+  content: "";
+  position: absolute;
+  inset: auto auto 0 -20px;
+  width: 160px;
+  height: 160px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.08), transparent 72%);
+  pointer-events: none;
+}
+
+.auth-form-stage::after {
+  content: "";
+  position: absolute;
+  inset: -30% 10% auto auto;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(244, 114, 182, 0.09), transparent 70%);
+  filter: blur(10px);
+  pointer-events: none;
+  animation: authPulse 8s ease-in-out infinite;
+}
+
+.auth-mode-caption {
+  max-width: 32rem;
+}
+
+.auth-form-panel::before {
+  content: "";
+  position: absolute;
+  inset: auto -10% -25% auto;
+  width: 240px;
+  height: 240px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(244, 114, 182, 0.14), transparent 70%);
+  pointer-events: none;
+}
+
+.auth-input-wrap {
+  position: relative;
+  background: linear-gradient(180deg, rgba(12, 18, 33, 0.92), rgba(8, 14, 27, 0.84));
+  backdrop-filter: blur(14px);
+  animation: authFieldFade 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+}
+
+.auth-input-wrap:focus-within {
+  transform: translateY(-2px);
+  border-color: rgba(125, 211, 252, 0.72);
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.12);
+}
+
+.auth-input-label {
+  letter-spacing: 0.24em;
+}
+
+.auth-input-field {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+.auth-input-field::placeholder {
+  color: rgba(148, 163, 184, 0.72);
+}
+
+.auth-input-field:focus {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.auth-actions {
+  align-items: stretch;
+}
+
+.auth-actions button {
+  min-height: 3.25rem;
+}
+
+.auth-toggle button:disabled,
+.auth-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.auth-primary-button {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f8fafc 0%, #bae6fd 45%, #67e8f9 100%);
+  background-size: 180% 180%;
+  animation: authBtnFlow 8s ease-in-out infinite;
+  box-shadow: 0 18px 34px rgba(14, 165, 233, 0.18);
+}
+
+.auth-primary-button:hover {
+  transform: translateY(-2px);
+  animation-duration: 4s;
+}
+
+.auth-secondary-button {
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.74), rgba(8, 14, 27, 0.52));
+}
+
+.auth-secondary-button:hover {
+  border-color: rgba(125, 211, 252, 0.45);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(8, 14, 27, 0.7));
+}
+
+/* Auth-page motion system.
+   Current use: brand-focused entrance and ambient animation.
+   Future production change: reduce or replace these first if performance or accessibility changes are needed. */
+@keyframes authPanelRise {
+  from {
+    opacity: 0;
+    transform: translateY(26px) scale(0.985);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes authFloatCard {
+  0%, 100% {
+    transform: rotate(12deg) translateY(0);
+  }
+  50% {
+    transform: rotate(15deg) translateY(-10px);
+  }
+}
+
+@keyframes authFieldFade {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes authTitleSweep {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes authCursorBlink {
+  0%, 45% {
+    opacity: 1;
+  }
+  46%, 100% {
+    opacity: 0.2;
+  }
+}
+
+@keyframes authStagger {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes authPulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.04); }
+}
+
+@keyframes authOrbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes authOrbitReverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes authDotDrift {
+  0% { background-position: 0 0, 12px 18px; }
+  100% { background-position: 80px 40px, 92px 58px; }
+}
+
+@keyframes authBgShift {
+  0% { background-position: 0% 40%; }
+  50% { background-position: 100% 60%; }
+  100% { background-position: 0% 40%; }
+}
+
+@keyframes authBtnFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes authBarFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes authIllustrationFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes authCardFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-5px) rotate(-0.8deg); }
+}
+
+@keyframes authChartPulse {
+  0%, 100% { transform: scaleX(0.92); opacity: 0.88; }
+  50% { transform: scaleX(1.03); opacity: 1; }
+}
+
+@keyframes authLineTravel {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -260; }
+}
+
+@keyframes authOrbPulse {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.2); opacity: 1; }
+}
+
+/* Protected home-page chrome starts here.
+   Current use: navbar, branded logo treatment, roadmap, placements, and section affordances. */
 .site-navbar {
   position: relative;
   isolation: isolate;
@@ -204,6 +904,8 @@ body {
   box-shadow: 0 8px 18px rgba(2, 6, 23, 0.35);
 }
 
+/* Search and keyboard focus enhancements for the one-page member home route.
+   Future production change: remove or simplify this if sections become separate routes. */
 .highlightable-section {
   position: relative;
   scroll-margin-top: 96px;
@@ -325,6 +1027,48 @@ body {
   }
 }
 
+@keyframes loaderOrbitSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes loaderOrbitReverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes loaderCorePulse {
+  0%, 100% {
+    transform: scale(0.92);
+    opacity: 0.78;
+    box-shadow: 0 0 0 0 rgba(103, 232, 249, 0.1);
+  }
+  50% {
+    transform: scale(1);
+    opacity: 1;
+    box-shadow: 0 0 0 14px rgba(103, 232, 249, 0.06);
+  }
+}
+
+@keyframes loaderDotFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Current use: page-entry reveal and gated loading states for auth/home transitions.
+   Future production change: replace with data-driven skeletons if the app starts waiting on APIs. */
 .page-enter {
   animation: fadeInPage 0.55s ease-out both;
 }
@@ -359,58 +1103,236 @@ body {
   display: grid;
   place-items: center;
   align-content: center;
-  gap: 16px;
-  background: radial-gradient(circle at top, #1e293b 0%, #020617 65%);
+  gap: 18px;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(56, 189, 248, 0.12), transparent 24%),
+    radial-gradient(circle at 72% 18%, rgba(244, 114, 182, 0.12), transparent 24%),
+    radial-gradient(circle at top, #16253c 0%, #020617 66%);
   color: #e2e8f0;
 }
 
-.loader-bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 6px;
-  height: 50px;
+.loader-orbit {
+  position: relative;
+  width: 118px;
+  height: 118px;
+  display: grid;
+  place-items: center;
 }
 
-.loader-bars span {
-  width: 7px;
-  height: 40px;
+.loader-ring {
+  position: absolute;
+  inset: 0;
   border-radius: 999px;
-  background: linear-gradient(180deg, #67e8f9 0%, #0ea5e9 100%);
-  transform-origin: bottom;
-  animation: loaderPulse 1s ease-in-out infinite;
+  border: 1px solid rgba(148, 163, 184, 0.12);
 }
 
-.loader-bars span:nth-child(2) { animation-delay: 0.1s; }
-.loader-bars span:nth-child(3) { animation-delay: 0.2s; }
-.loader-bars span:nth-child(4) { animation-delay: 0.3s; }
-.loader-bars span:nth-child(5) { animation-delay: 0.4s; }
-
-.loader-bars::before,
-.loader-bars::after {
+.loader-ring::after {
   content: "";
-  width: 2px;
-  height: 40px;
-  background: rgba(103, 232, 249, 0.25);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(135deg, #67e8f9, #38bdf8);
+  box-shadow: 0 0 18px rgba(103, 232, 249, 0.7);
+}
+
+.loader-ring-outer {
+  animation: loaderOrbitSpin 5.5s linear infinite;
+}
+
+.loader-ring-outer::after {
+  margin-top: -58px;
+}
+
+.loader-ring-middle {
+  inset: 15px;
+  border-color: rgba(56, 189, 248, 0.16);
+  animation: loaderOrbitReverse 4.2s linear infinite;
+}
+
+.loader-ring-middle::after {
+  width: 8px;
+  height: 8px;
+  margin-left: 44px;
+  background: linear-gradient(135deg, #f472b6, #fb7185);
+  box-shadow: 0 0 18px rgba(244, 114, 182, 0.5);
+}
+
+.loader-ring-inner {
+  inset: 31px;
+  border-color: rgba(125, 211, 252, 0.22);
+  animation: loaderOrbitSpin 3.4s linear infinite;
+}
+
+.loader-ring-inner::after {
+  width: 6px;
+  height: 6px;
+  margin-top: 27px;
+  background: linear-gradient(135deg, #a5f3fc, #67e8f9);
+}
+
+.loader-core {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.12) 38%, transparent 40%),
+    linear-gradient(135deg, rgba(103, 232, 249, 0.95), rgba(59, 130, 246, 0.85));
+  box-shadow:
+    0 0 40px rgba(56, 189, 248, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  animation: loaderCorePulse 2.2s ease-in-out infinite;
+}
+
+.loader-dot {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.18);
+  animation: loaderDotFloat 2.6s ease-in-out infinite;
+}
+
+.loader-dot-one {
+  top: 15px;
+  right: 10px;
+  background: linear-gradient(135deg, #67e8f9, #0ea5e9);
+}
+
+.loader-dot-two {
+  bottom: 18px;
+  left: 12px;
+  background: linear-gradient(135deg, #f472b6, #fb7185);
+  animation-delay: 220ms;
+}
+
+.loader-copy {
+  text-align: center;
+  max-width: 26rem;
 }
 
 .loader-text {
   margin: 0;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  font-size: 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
   color: #67e8f9;
-  animation: shimmerText 0.9s ease-in-out infinite alternate;
+  animation: shimmerText 1.6s ease-in-out infinite alternate;
 }
 
+.loader-detail {
+  margin: 0.65rem 0 0;
+  color: #94a3b8;
+  font-size: 0.94rem;
+  line-height: 1.7;
+}
+
+/* Accessibility and responsive behavior.
+   Current use: reduce motion when requested and relax fixed-height auth panels on smaller screens. */
 @media (prefers-reduced-motion: reduce) {
   .page-enter,
   .reveal,
-  .loader-bars span,
-  .loader-text {
+  .loader-text,
+  .loader-ring,
+  .loader-core,
+  .loader-dot,
+  .auth-reveal-panel,
+  .auth-light-streak,
+  .auth-input-wrap,
+  .auth-floating-dots,
+  .auth-hero-glow,
+  .auth-illustration-float,
+  .auth-illustration-card,
+  .auth-illustration-line,
+  .auth-illustration-bar,
+  .auth-illustration-orb,
+  .auth-primary-button {
     animation: none !important;
   }
 
   .reveal {
     opacity: 1;
+  }
+}
+
+@media (max-width: 1100px) {
+  .auth-entry-grid {
+    height: auto !important;
+    min-height: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .auth-entry {
+    overflow: auto;
+  }
+
+  .auth-light-streak {
+    display: none;
+  }
+
+  .auth-hero-layout,
+  .auth-form-shell {
+    justify-content: flex-start;
+  }
+
+  .auth-form-panel {
+    align-self: stretch;
+    height: auto;
+  }
+
+  .auth-hero-panel {
+    height: auto;
+  }
+
+  .auth-form-shell {
+    overflow: visible;
+    margin-right: 0;
+    padding-right: 0;
+    scrollbar-gutter: auto;
+  }
+
+  .auth-toggle {
+    position: static;
+  }
+}
+
+@media (min-width: 640px) {
+  .auth-hero-panel,
+  .auth-form-panel {
+    height: calc(100vh - 2rem);
+  }
+}
+
+@media (min-width: 1024px) {
+  .auth-hero-panel,
+  .auth-form-panel {
+    height: calc(100vh - 2.5rem);
+  }
+}
+
+@media (max-width: 640px) {
+  .auth-entry {
+    padding: 16px;
+    overflow: auto;
+  }
+
+  .auth-title {
+    font-size: clamp(2.4rem, 10vw, 3.7rem);
+  }
+
+  .auth-hero-panel,
+  .auth-form-panel {
+    padding: 1.25rem;
+  }
+
+  .auth-form-meta {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

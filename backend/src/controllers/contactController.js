@@ -1,4 +1,7 @@
 export function submitContact(req, res) {
+  // Current behavior is intentionally minimal: validate input and echo it back.
+  // Future production change: replace this with database persistence, spam protection,
+  // notifications, and audit logging without changing the route contract.
   const { name = '', email = '', phone = '', message = '' } = req.body ?? {}
 
   if (!name.trim() || !email.trim() || !message.trim()) {
