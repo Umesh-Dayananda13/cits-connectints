@@ -38,6 +38,8 @@ const buildFolderPath = (value) => {
     : config.cloudinary.uploadFolder
 }
 
+const isManagedCloudinaryAsset = (publicId) => publicId.startsWith(`${config.cloudinary.uploadFolder}/`)
+
 export function signCloudinaryUpload(req, res) {
   // Used by the admin panel before each direct browser-to-Cloudinary upload.
   // The frontend calls /api/cloudinary/sign-upload, receives signed params,
@@ -83,6 +85,13 @@ export async function deleteCloudinaryAsset(req, res) {
     return res.status(400).json({
       ok: false,
       error: 'publicId is required',
+    })
+  }
+
+  if (!isManagedCloudinaryAsset(publicId)) {
+    return res.status(400).json({
+      ok: false,
+      error: `Only assets under ${config.cloudinary.uploadFolder}/ can be deleted.`,
     })
   }
 

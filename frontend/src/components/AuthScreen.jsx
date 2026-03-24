@@ -21,6 +21,13 @@ const heroHighlights = [
   'Placement-focused support',
 ]
 
+// Impact stats to showcase CITS achievements
+const impactStats = [
+  { label: 'Students Guided', value: '1000+' },
+  { label: 'Successfully Placed', value: '850+' },
+  { label: 'Live Sessions', value: '250+' },
+]
+
 function TrustShieldIcon() {
   // Local icon used only inside the auth trust strip.
   return (
@@ -98,54 +105,74 @@ export default function AuthScreen({
   return (
     <main className="auth-entry min-h-screen px-3 py-3 text-slate-100 sm:px-4 sm:py-4 lg:px-5 lg:py-5">
       <div className="auth-entry-grid mx-auto grid min-h-[calc(100vh-1.5rem)] w-full max-w-7xl gap-4 sm:min-h-[calc(100vh-2rem)] lg:min-h-[calc(100vh-2.5rem)] lg:grid-cols-2">
-        {/* Left panel explains what CITS is and why this portal exists. */}
+        {/* Left panel with advanced animated intro */}
         <section className="auth-hero-panel auth-reveal-panel relative overflow-hidden rounded-[2rem] border border-white/10 px-6 py-6 sm:px-7 sm:py-7 lg:px-8 lg:py-8">
-          <div className="auth-ambient auth-ambient-one" aria-hidden="true" />
-          <div className="auth-ambient auth-ambient-two" aria-hidden="true" />
-          <div className="auth-grid-lines" aria-hidden="true" />
-          <div className="auth-light-streak" aria-hidden="true" />
-          <div className="auth-floating-dots" aria-hidden="true" />
+          {/* Grid pattern background */}
+          <div className="auth-grid-pattern" />
 
-          <div className="auth-hero-layout relative z-10 flex h-full flex-col gap-6">
-            <div className="auth-hero-glow" aria-hidden="true" />
+          {/* Animated background */}
+          <div className="auth-video-bg">
+            {/* Tech lines */}
+            <div className="auth-tech-line auth-tech-line-1" />
+            <div className="auth-tech-line auth-tech-line-2" />
+            <div className="auth-tech-line auth-tech-line-3" />
 
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="auth-brand-badge inline-flex items-center gap-3 rounded-full border border-white/12 px-4 py-2">
-                <span className="auth-brand-dot" aria-hidden="true" />
-                <span className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-200">CITS Portal</span>
+            {/* Floating glow elements */}
+            <div className="auth-video-element auth-video-element-1" />
+            <div className="auth-video-element auth-video-element-2" />
+            <div className="auth-video-element auth-video-element-3" />
+            <div className="auth-video-element auth-video-element-4" />
+
+            {/* Floating particles with different sizes */}
+            {[...Array(12)].map((_, i) => {
+              const sizes = ['auth-particle-small', 'auth-particle-medium', 'auth-particle-large']
+              const size = sizes[Math.floor(Math.random() * sizes.length)]
+              return (
+                <div
+                  key={i}
+                  className={`auth-floating-particle ${size}`}
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    animationDelay: `${Math.random() * 5}s`,
+                    animationDuration: `${4 + Math.random() * 6}s`,
+                  }}
+                />
+              )
+            })}
+
+            {/* Overlay gradient */}
+            <div className="auth-video-overlay" />
+          </div>
+
+          {/* Content overlay */}
+          <div className="auth-hero-layout relative z-10 flex h-full flex-col justify-center">
+            <div className="max-w-[36rem]">
+              <p className="auth-kicker text-xs font-semibold uppercase tracking-[0.34em] text-sky-200">
+                Career Access Layer
+              </p>
+              <h1 className="auth-title mt-4 font-black leading-[0.9] text-white">
+                CITS: Training that turns into <span className="auth-title-emphasis">placements.</span>
+              </h1>
+              <div className="auth-type-shell mt-4" aria-label={`CITS focus: ${heroTypingPhrases[typingIndex]}`}>
+                <span className="auth-type-label">Built for</span>
+                <span className="auth-type-text">{typedText}</span>
+                <span className="auth-type-cursor" aria-hidden="true" />
               </div>
-              <div className="auth-surface-tag rounded-full border border-cyan-300/18 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-200">
-                Secure Access
-              </div>
+              <p className="auth-copy mt-6 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
+                Career-first training for learners who want structured skills, mentor support, and real interview outcomes.
+              </p>
             </div>
 
-            {/* The hero stays intentionally light: title, short proof points, and no deep content. */}
-            <div className="flex flex-1 flex-col justify-center">
-              <div className="max-w-[34rem]">
-                <p className="auth-kicker text-xs font-semibold uppercase tracking-[0.34em] text-sky-200">
-                  Career Access Layer
-                </p>
-                <h1 className="auth-title mt-4 font-black leading-[0.9] text-white">
-                  CITS: Training that turns into <span className="auth-title-emphasis">placements.</span>
-                </h1>
-                <div className="auth-type-shell mt-4" aria-label={`CITS focus: ${heroTypingPhrases[typingIndex]}`}>
-                  <span className="auth-type-label">Built for</span>
-                  <span className="auth-type-text">{typedText}</span>
-                  <span className="auth-type-cursor" aria-hidden="true" />
-                </div>
-                <p className="auth-copy mt-4 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
-                  Career-first training for learners who want structured skills, mentor support, and real interview outcomes.
-                </p>
-              </div>
-
-              {/* These pills are the easiest place to tweak present/future positioning copy. */}
-              <div className="mt-6 flex max-w-[36rem] flex-wrap gap-3">
-                {heroHighlights.map((point) => (
-                  <div
-                    key={point}
-                    className="auth-copy-item auth-stagger rounded-full border border-cyan-300/18 bg-slate-950/40 px-4 py-2 text-sm font-medium text-slate-200"
-                  >
-                    {point}
+            {/* Impact statistics */}
+            <div className="mt-12 rounded-[1.4rem] border border-cyan-300/18 bg-slate-950/60 p-6 backdrop-blur-sm">
+              <p className="mb-6 text-xs font-semibold uppercase tracking-[0.34em] text-sky-200">
+                CITS Impact
+              </p>
+              <div className="grid grid-cols-3 gap-6">
+                {impactStats.map((stat, idx) => (
+                  <div key={stat.label} className="flex flex-col items-center text-center" style={{animationDelay: `${idx * 0.1}s`}}>
+                    <p className="text-3xl font-black text-cyan-200">{stat.value}</p>
+                    <p className="mt-2 text-xs font-semibold text-slate-300 leading-tight">{stat.label}</p>
                   </div>
                 ))}
               </div>
@@ -253,6 +280,22 @@ export default function AuthScreen({
                       className="auth-input-field mt-2 w-full text-slate-100 outline-none transition"
                     />
                   </label>
+
+                  {isSignUp && (
+                    <label className="auth-input-wrap block rounded-[1.2rem] border border-white/10 px-4 pb-3 pt-3">
+                      <span className="auth-input-label block text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                        Phone Number
+                      </span>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={authForm.phone}
+                        onChange={onFieldChange}
+                        placeholder="+91 98765 43210"
+                        className="auth-input-field mt-2 w-full text-slate-100 outline-none transition"
+                      />
+                    </label>
+                  )}
                 </div>
 
                 <div className={`mt-3 grid gap-3 ${isSignUp ? 'sm:grid-cols-2' : ''}`}>
@@ -286,6 +329,14 @@ export default function AuthScreen({
                     </label>
                   )}
                 </div>
+
+                {isSignUp ? (
+                  // Keep policy copy close to input to reduce signup friction.
+                  // Future production change: source this from shared policy config if rules change often.
+                  <p className="mt-2 text-xs text-slate-400">
+                    Password must be 8+ characters and include uppercase, lowercase, number, and special character.
+                  </p>
+                ) : null}
 
                 {/* Inline feedback is shared by local validation and Firebase responses from App.jsx. */}
                 {(authError || authMessage) && (

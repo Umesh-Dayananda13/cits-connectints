@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
@@ -8,12 +8,16 @@ import {
 } from 'firebase/auth'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { defaultSiteContent } from './content/siteContent'
-import AdminPanel from './components/AdminPanel'
 import AuthScreen from './components/AuthScreen'
-import ChatbotWidget from './components/ChatbotWidget'
+import PaymentModal from './components/PaymentModal'
 import './index.css'
 import { auth, firebaseConfigIssue, isFirebaseConfigured } from './firebase'
 import { subscribeSiteContent } from './services/siteContent'
+import { getUserPurchases, verifyPayment } from './services/payment'
+import { saveUserProfile } from './services/userProfiles'
+
+const AdminPanel = lazy(() => import('./components/AdminPanel'))
+const ChatbotWidget = lazy(() => import('./components/ChatbotWidget'))
 
 // Main frontend shell.
 // Owns:
@@ -213,13 +217,36 @@ const firebaseAuthMessages = {
   'auth/invalid-email': 'Enter a valid email address.',
   'auth/network-request-failed': 'Network error. Check your connection and try again.',
   'auth/too-many-requests': 'Too many attempts. Try again later.',
-  'auth/weak-password': 'Password must be at least 6 characters.',
+  'auth/weak-password': 'Password must be stronger: 8+ chars, uppercase, lowercase, number, and special character.',
 }
 
 // Keep message mapping separate so auth handlers stay focused on control flow.
 const getFirebaseAuthMessage = (error) => (
   firebaseAuthMessages[error?.code] || 'Authentication failed. Please try again.'
 )
+
+// Formats rule lists into human-readable UI messages.
+// Example: ["A", "B", "C"] -> "A, B, and C"
+const formatRuleList = (items) => {
+  if (items.length === 0) return ''
+  if (items.length === 1) return items[0]
+  if (items.length === 2) return `${items[0]} and ${items[1]}`
+  return `${items.slice(0, -1).join(', ')}, and ${items[items.length - 1]}`
+}
+
+// Returns unmet password requirements for create-account validation.
+// Future production change: keep this as the single source of truth if password policy changes.
+const getPasswordRuleFailures = (password) => {
+  const failures = []
+
+  if (password.length < 8) failures.push('at least 8 characters')
+  if (!/[a-z]/.test(password)) failures.push('one lowercase letter')
+  if (!/[A-Z]/.test(password)) failures.push('one uppercase letter')
+  if (!/[0-9]/.test(password)) failures.push('one number')
+  if (!/[^A-Za-z0-9]/.test(password)) failures.push('one special character')
+
+  return failures
+}
 
 const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS || '')
   .split(',')
@@ -246,6 +273,29 @@ const getMemberName = (user) => {
 
   const emailPrefix = user?.email?.split('@')[0]?.trim()
   return emailPrefix ? formatMemberName(emailPrefix) : 'Member'
+}
+
+// Loads course-purchase records from both uid and legacy email-based paths.
+// This keeps older purchase records visible during uid/email migration.
+const loadPurchasesForUser = async (user) => {
+  const lookupIds = [...new Set([
+    user?.uid,
+    user?.email?.trim().toLowerCase(),
+  ].filter(Boolean))]
+
+  let mergedPurchases = {}
+  for (const lookupId of lookupIds) {
+    try {
+      const purchases = await getUserPurchases(lookupId)
+      if (purchases && typeof purchases === 'object') {
+        mergedPurchases = { ...mergedPurchases, ...purchases }
+      }
+    } catch (error) {
+      console.error(`Failed to load purchases for ${lookupId}:`, error)
+    }
+  }
+
+  return mergedPurchases
 }
 
 // Reused loader for auth gating and protected home entry.
@@ -280,6 +330,7 @@ function App() {
   const [authForm, setAuthForm] = useState({
     name: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: '',
   })
@@ -294,12 +345,16 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchFeedback, setSearchFeedback] = useState('')
   const [siteContent, setSiteContent] = useState(defaultSiteContent)
+  // Payment modal state
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [selectedCourse, setSelectedCourse] = useState(null)
+  const [userPurchases, setUserPurchases] = useState({})
   // Current routing keeps auth on /login and /signup, with the protected site on /home.
   // Future production change: expand this route-driven mode if onboarding or member dashboards split out.
   const authMode = location.pathname === '/signup' ? 'signup' : 'signin'
   const homeAccessLabel = 'Member Access'
   const homeVisitorLabel = `Welcome, ${memberName || 'Member'}`
-  const isAdmin = areAdminEmailsConfigured ? isAdminEmail(currentUser?.email) : Boolean(currentUser?.email)
+  const isAdmin = areAdminEmailsConfigured && isAdminEmail(currentUser?.email)
   // Everything below is the public site data source. /admin writes to Firestore,
   // subscribeSiteContent reads that same document, and /home renders from it here.
   const {
@@ -403,8 +458,21 @@ function App() {
         return
       }
 
-      if (password.length < 6) {
-        setAuthError('Password must be at least 6 characters.')
+      const phoneDigits = authForm.phone.replace(/\D/g, '')
+      if (!authForm.phone.trim()) {
+        setAuthError('Phone number is required.')
+        return
+      }
+
+      if (phoneDigits.length < 7) {
+        setAuthError('Enter a valid phone number.')
+        return
+      }
+
+      // Keep one validation function so UI and backend policy remain consistent.
+      const passwordRuleFailures = getPasswordRuleFailures(password)
+      if (passwordRuleFailures.length > 0) {
+        setAuthError(`Password must include ${formatRuleList(passwordRuleFailures)}.`)
         return
       }
 
@@ -422,9 +490,17 @@ function App() {
       if (authMode === 'signup') {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password)
         const trimmedName = authForm.name.trim()
+        const trimmedPhone = authForm.phone.trim()
         // For now we only persist a display name in Firebase Auth.
-        // Future production profiles can extend this step with Firestore or backend persistence.
+        // Profile data is also persisted through backend /api/user-profile for admin visibility.
         await updateProfile(userCredential.user, { displayName: trimmedName })
+        // Save explicit profile fields so admin can view registered users (name/email/phone).
+        // Future production change: this can include address, consent flags, or referral metadata.
+        await saveUserProfile({
+          email,
+          name: trimmedName,
+          phone: trimmedPhone,
+        })
         setMemberName(trimmedName)
         setAuthMessage('Account created. Opening the main website.')
       } else {
@@ -436,7 +512,11 @@ function App() {
       setAccessMode('member')
       navigate('/home')
     } catch (error) {
-      setAuthError(getFirebaseAuthMessage(error))
+      if (error?.code) {
+        setAuthError(getFirebaseAuthMessage(error))
+      } else {
+        setAuthError(error?.message || 'Could not finish account setup. Please try again.')
+      }
     } finally {
       setIsAuthBusy(false)
     }
@@ -460,7 +540,7 @@ function App() {
     setMemberName('')
     setAuthError('')
     setAuthMessage('')
-    setAuthForm({ name: '', email: '', password: '', confirmPassword: '' })
+    setAuthForm({ name: '', email: '', phone: '', password: '', confirmPassword: '' })
     setMobileMenuOpen(false)
 
     if (auth && accessMode === 'member') {
@@ -472,6 +552,21 @@ function App() {
     }
 
     navigate('/login')
+  }
+
+  // Handle course enrollment
+  const handleEnrollCourse = (course) => {
+    if (!currentUser) {
+      navigate('/login')
+      return
+    }
+    setSelectedCourse(course)
+    setShowPaymentModal(true)
+  }
+
+  // Check if user already purchased a course
+  const isCoursePurchased = (courseId) => {
+    return userPurchases && userPurchases[courseId]
   }
 
   // Current use: short branded loading delay before the protected home page appears.
@@ -549,6 +644,68 @@ function App() {
     }
   }, [accessMode, isLoading, location.pathname])
 
+  // Load user purchases when logged in
+  useEffect(() => {
+    if (!currentUser) {
+      setUserPurchases({})
+      return
+    }
+
+    const loadPurchases = async () => {
+      try {
+        const purchases = await loadPurchasesForUser(currentUser)
+        setUserPurchases(purchases)
+      } catch (error) {
+        console.error('Failed to load purchases:', error)
+      }
+    }
+
+    loadPurchases()
+  }, [currentUser])
+
+  // Stripe redirects back to /home after payment. Verify the session here and then
+  // refresh purchases so both member and admin accounts see updated enrollment state.
+  useEffect(() => {
+    if (!currentUser || location.pathname !== '/home') return
+
+    const query = new URLSearchParams(location.search)
+    const paymentStatus = query.get('payment')
+    const sessionId = query.get('sessionId')
+
+    if (paymentStatus !== 'success' || !sessionId) return
+
+    let isCancelled = false
+    const finalizePayment = async () => {
+      try {
+        await verifyPayment({
+          sessionId,
+          userId: currentUser.uid,
+        })
+      } catch (error) {
+        console.error('Failed to verify payment:', error)
+      }
+
+      try {
+        const purchases = await loadPurchasesForUser(currentUser)
+        if (!isCancelled) {
+          setUserPurchases(purchases)
+        }
+      } catch (error) {
+        console.error('Failed to refresh purchases after payment:', error)
+      }
+
+      if (!isCancelled) {
+        navigate('/home', { replace: true })
+      }
+    }
+
+    finalizePayment()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [currentUser, location.pathname, location.search, navigate])
+
   // Current use: keyword-to-section scrolling for the single-page home layout.
   // Future production change: replace with routed search results if content stops living on one page.
   const openSection = (sectionId, label) => {
@@ -614,10 +771,19 @@ function App() {
   const adminPage = isAdmin ? (
     // /admin renders the structured Firestore editor. Saving here updates the same
     // content object later rendered by /home and passed into the chatbot knowledge.
-    <AdminPanel
-      onLogout={handleLogout}
-      userEmail={currentUser?.email || ''}
-    />
+    <Suspense
+      fallback={(
+        <LoadingScreen
+          label="Loading Admin"
+          detail="Preparing secure admin tools and content controls."
+        />
+      )}
+    >
+      <AdminPanel
+        onLogout={handleLogout}
+        userEmail={currentUser?.email || ''}
+      />
+    </Suspense>
   ) : (
     <Navigate to="/home" replace />
   )
@@ -912,6 +1078,21 @@ function App() {
                   {course.tagline && (
                     <p className="mt-4 text-sm font-semibold text-amber-300">{course.tagline}</p>
                   )}
+                  <button
+                    onClick={() => handleEnrollCourse({
+                      id: `${course.title || 'course'}-${index}`,
+                      title: course.title,
+                      fee: parseInt(course.fee) || 0,
+                    })}
+                    disabled={isCoursePurchased(`${course.title || 'course'}-${index}`)}
+                    className={`mt-6 w-full rounded-lg px-4 py-3 font-semibold transition ${
+                      isCoursePurchased(`${course.title || 'course'}-${index}`)
+                        ? 'bg-emerald-500/20 text-emerald-300 cursor-default'
+                        : 'bg-cyan-500 text-slate-950 hover:bg-cyan-400'
+                    }`}
+                  >
+                    {isCoursePurchased(`${course.title || 'course'}-${index}`) ? '✓ Enrolled' : 'Enroll Now'}
+                  </button>
                 </div>
               </div>
             ))}
@@ -1206,26 +1387,28 @@ function App() {
         </footer>
       </main>
 
-      <ChatbotWidget
-        memberName={memberName}
-        knowledge={{
-          blogPreviews: siteBlogPreviews,
-          contact: {
-            alternatePhone,
-            email: contactEmail,
-            phone: primaryPhone,
-            supportHours,
-          },
-          courseIncludes: siteCourseIncludes,
-          courses: siteCourses,
-          impactStats: siteImpactStats,
-          placedStudents: sitePlacedStudents,
-          upcomingBatches: siteUpcomingBatches,
-          verificationSteps: siteVerificationSteps,
-          whatsappNumber,
-        }}
-        onNavigateToSection={openSection}
-      />
+      <Suspense fallback={null}>
+        <ChatbotWidget
+          memberName={memberName}
+          knowledge={{
+            blogPreviews: siteBlogPreviews,
+            contact: {
+              alternatePhone,
+              email: contactEmail,
+              phone: primaryPhone,
+              supportHours,
+            },
+            courseIncludes: siteCourseIncludes,
+            courses: siteCourses,
+            impactStats: siteImpactStats,
+            placedStudents: sitePlacedStudents,
+            upcomingBatches: siteUpcomingBatches,
+            verificationSteps: siteVerificationSteps,
+            whatsappNumber,
+          }}
+          onNavigateToSection={openSection}
+        />
+      </Suspense>
 
       {/* Floating WhatsApp shortcut stays visible for quick contact from any section. */}
       <a
@@ -1243,15 +1426,27 @@ function App() {
   )
 
   return (
-    // Router keeps login, signup, and home addressable in this preview app.
-    <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="/login" element={accessMode ? <Navigate to="/home" replace /> : authPage} />
-      <Route path="/signup" element={accessMode ? <Navigate to="/home" replace /> : authPage} />
-      <Route path="/home" element={accessMode ? homePage : <Navigate to="/login" replace />} />
-      <Route path="/admin" element={accessMode ? adminPage : <Navigate to="/login" replace />} />
-      <Route path="*" element={<Navigate to={accessMode ? '/home' : '/login'} replace />} />
-    </Routes>
+    <>
+      {/* Router keeps login, signup, and home addressable in this preview app. */}
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={accessMode ? <Navigate to="/home" replace /> : authPage} />
+        <Route path="/signup" element={accessMode ? <Navigate to="/home" replace /> : authPage} />
+        <Route path="/home" element={accessMode ? homePage : <Navigate to="/login" replace />} />
+        <Route path="/admin" element={accessMode ? adminPage : <Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to={accessMode ? '/home' : '/login'} replace />} />
+      </Routes>
+
+      {/* Payment Modal for course enrollment */}
+      {showPaymentModal && selectedCourse && (
+        <PaymentModal
+          course={selectedCourse}
+          userEmail={currentUser?.email || ''}
+          userId={currentUser?.uid || ''}
+          onClose={() => setShowPaymentModal(false)}
+        />
+      )}
+    </>
   )
 }
 

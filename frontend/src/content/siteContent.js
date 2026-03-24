@@ -216,6 +216,15 @@ const defaultFooter = {
 const isPlainObject = (value) => Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 
 const pickArray = (value, fallback) => (Array.isArray(value) ? value : fallback)
+const roadmapIconFallbacks = ['Chat', 'Book', 'Form', 'Guide', 'Live']
+const hasBrokenIconEncoding = (value) => typeof value === 'string' && /[ÂÃâð]/.test(value)
+const normalizeRoadmapStep = (step, index) => ({
+  ...step,
+  icon: !step?.icon || hasBrokenIconEncoding(step.icon)
+    ? (roadmapIconFallbacks[index] || 'Step')
+    : step.icon,
+})
+const normalizeRoadmapSteps = (steps) => steps.map((step, index) => normalizeRoadmapStep(step, index))
 
 export const defaultSiteContent = {
   about: defaultAbout,
@@ -229,7 +238,7 @@ export const defaultSiteContent = {
   navItems: defaultNavItems,
   placedStudents: defaultPlacedStudents,
   referralBanner: defaultReferralBanner,
-  roadmapSteps: defaultRoadmapSteps,
+  roadmapSteps: normalizeRoadmapSteps(defaultRoadmapSteps),
   searchTargets: defaultSearchTargets,
   upcomingBatches: defaultUpcomingBatches,
   verificationSteps: defaultVerificationSteps,
@@ -262,7 +271,7 @@ export const mergeSiteContent = (remoteContent = {}) => ({
   referralBanner: isPlainObject(remoteContent.referralBanner)
     ? { ...defaultSiteContent.referralBanner, ...remoteContent.referralBanner }
     : defaultSiteContent.referralBanner,
-  roadmapSteps: pickArray(remoteContent.roadmapSteps, defaultSiteContent.roadmapSteps),
+  roadmapSteps: normalizeRoadmapSteps(pickArray(remoteContent.roadmapSteps, defaultSiteContent.roadmapSteps)),
   searchTargets: pickArray(remoteContent.searchTargets, defaultSiteContent.searchTargets),
   upcomingBatches: pickArray(remoteContent.upcomingBatches, defaultSiteContent.upcomingBatches),
   verificationSteps: pickArray(remoteContent.verificationSteps, defaultSiteContent.verificationSteps),
