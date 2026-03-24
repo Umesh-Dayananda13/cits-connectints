@@ -108,7 +108,7 @@ export async function verifyPayment({ sessionId, userId, courseId }) {
   }
 }
 
-export async function getUserPurchases(userId) {
+export async function getUserPurchases(userId, { silent = false } = {}) {
   try {
     // Returns map keyed by courseId.
     const headers = await getAuthHeaders({
@@ -128,7 +128,9 @@ export async function getUserPurchases(userId) {
     const { data } = payload
     return data
   } catch (error) {
-    console.error('Error fetching user purchases:', error)
+    if (!silent) {
+      console.error('Error fetching user purchases:', error)
+    }
     return {}
   }
 }

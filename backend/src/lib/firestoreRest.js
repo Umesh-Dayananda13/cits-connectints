@@ -72,6 +72,37 @@ const getFirestoreErrorMessage = (payload, defaultMessage) => (
   payload?.error?.message || payload?.error?.status || defaultMessage
 )
 
+const toStatusCodeFromFirestoreStatus = (status) => {
+  switch (status) {
+    case 'PERMISSION_DENIED':
+      return 403
+    case 'UNAUTHENTICATED':
+      return 401
+    case 'NOT_FOUND':
+      return 404
+    case 'ALREADY_EXISTS':
+      return 409
+    case 'INVALID_ARGUMENT':
+    case 'FAILED_PRECONDITION':
+      return 400
+    case 'RESOURCE_EXHAUSTED':
+      return 429
+    default:
+      return 500
+  }
+}
+
+const toFirestoreRequestError = (payload, defaultMessage) => {
+  const firestoreError = payload?.error || {}
+  const firestoreStatus = String(firestoreError.status || '').trim()
+  const error = new Error(getFirestoreErrorMessage(payload, defaultMessage))
+  error.firestoreStatus = firestoreStatus
+  error.statusCode = firestoreStatus
+    ? toStatusCodeFromFirestoreStatus(firestoreStatus)
+    : 500
+  return error
+}
+
 const getAuthHeaders = ({ accessToken, idToken } = {}) => {
   const bearerToken = idToken || accessToken
   return bearerToken
@@ -91,7 +122,7 @@ export async function getFirestoreDocument({ documentPath, idToken, accessToken 
 
   const payload = await response.json().catch(() => ({}))
   if (!response.ok) {
-    throw new Error(getFirestoreErrorMessage(payload, 'Firestore read failed.'))
+    throw toFirestoreRequestError(payload, 'Firestore read failed.')
   }
 
   return parseFirestoreDocument(payload)
@@ -109,7 +140,7 @@ export async function listFirestoreDocuments({ collectionPath, idToken, accessTo
 
   const payload = await response.json().catch(() => ({}))
   if (!response.ok) {
-    throw new Error(getFirestoreErrorMessage(payload, 'Firestore list failed.'))
+    throw toFirestoreRequestError(payload, 'Firestore list failed.')
   }
 
   return (payload.documents || []).map((document) => {
@@ -168,7 +199,7 @@ export async function runFirestoreCollectionGroupQuery({
       ? payload.find((item) => item?.error)
       : payload
 
-    throw new Error(getFirestoreErrorMessage(firstError, 'Firestore query failed.'))
+    throw toFirestoreRequestError(firstError, 'Firestore query failed.')
   }
 
   const resultRows = Array.isArray(payload) ? payload : []
@@ -210,7 +241,7 @@ export async function setFirestoreDocument({ data, documentPath, idToken, access
 
   const payload = await response.json().catch(() => ({}))
   if (!response.ok) {
-    throw new Error(getFirestoreErrorMessage(payload, 'Firestore write failed.'))
+    throw toFirestoreRequestError(payload, 'Firestore write failed.')
   }
 
   return parseFirestoreDocument(payload)

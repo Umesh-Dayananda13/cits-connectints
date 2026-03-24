@@ -51,6 +51,29 @@ const toSafeTimestamp = (value) => {
   return Number.isFinite(parsed) ? parsed : 0
 }
 
+const isFirestorePermissionDenied = (error) => {
+  const firestoreStatus = String(error?.firestoreStatus || '').toUpperCase()
+  const message = String(error?.message || '').toLowerCase()
+  return (
+    firestoreStatus === 'PERMISSION_DENIED' ||
+    message.includes('missing or insufficient permissions')
+  )
+}
+
+const toControllerError = (error, fallbackMessage, { permissionMessage } = {}) => {
+  if (isFirestorePermissionDenied(error)) {
+    return {
+      message: permissionMessage || 'Missing or insufficient permissions.',
+      statusCode: 403,
+    }
+  }
+
+  return {
+    message: error?.message || fallbackMessage,
+    statusCode: Number(error?.statusCode) || 500,
+  }
+}
+
 // POST /api/user-profile
 // Persists signup profile data into users/{uid} so admin can view registered users.
 export async function saveUserProfile(req, res) {
@@ -130,9 +153,13 @@ export async function saveUserProfile(req, res) {
       data: profileRecord,
     })
   } catch (error) {
-    res.status(500).json({
+    const controllerError = toControllerError(error, 'Failed to save user profile.', {
+      permissionMessage: 'Missing or insufficient permissions to save user profile.',
+    })
+
+    res.status(controllerError.statusCode).json({
       ok: false,
-      error: error?.message || 'Failed to save user profile.',
+      error: controllerError.message,
     })
   }
 }
@@ -181,9 +208,13 @@ export async function getAdminUsers(req, res) {
       data: normalizedUsers,
     })
   } catch (error) {
-    res.status(500).json({
+    const controllerError = toControllerError(error, 'Failed to load user profiles.', {
+      permissionMessage: 'Missing or insufficient permissions to load users. Deploy firestore rules and/or configure Firebase service-account env values on backend.',
+    })
+
+    res.status(controllerError.statusCode).json({
       ok: false,
-      error: error?.message || 'Failed to load user profiles.',
+      error: controllerError.message,
     })
   }
 }

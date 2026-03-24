@@ -13,14 +13,6 @@ const heroTypingPhrases = [
   'interview-winning confidence',
 ]
 
-// Keep hero highlights short so the left panel stays immersive and avoids internal scrolling.
-// Future production change: this list is the safest place to swap positioning/copy for campaigns.
-const heroHighlights = [
-  'Mentor-led training',
-  'Mock interviews and resumes',
-  'Placement-focused support',
-]
-
 // Impact stats to showcase CITS achievements
 const impactStats = [
   { label: 'Students Guided', value: '1000+' },
@@ -122,23 +114,6 @@ export default function AuthScreen({
             <div className="auth-video-element auth-video-element-2" />
             <div className="auth-video-element auth-video-element-3" />
             <div className="auth-video-element auth-video-element-4" />
-
-            {/* Floating particles with different sizes */}
-            {[...Array(12)].map((_, i) => {
-              const sizes = ['auth-particle-small', 'auth-particle-medium', 'auth-particle-large']
-              const size = sizes[Math.floor(Math.random() * sizes.length)]
-              return (
-                <div
-                  key={i}
-                  className={`auth-floating-particle ${size}`}
-                  style={{
-                    left: `${Math.random() * 100}%`,
-                    animationDelay: `${Math.random() * 5}s`,
-                    animationDuration: `${4 + Math.random() * 6}s`,
-                  }}
-                />
-              )
-            })}
 
             {/* Overlay gradient */}
             <div className="auth-video-overlay" />

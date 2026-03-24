@@ -298,7 +298,7 @@ const loadPurchasesForUser = async (user) => {
   // Permission failures here are expected in stricter rules, so keep this silent.
   if (legacyEmailLookupId && legacyEmailLookupId !== primaryLookupId) {
     try {
-      const purchases = await getUserPurchases(legacyEmailLookupId)
+      const purchases = await getUserPurchases(legacyEmailLookupId, { silent: true })
       if (purchases && typeof purchases === 'object') {
         mergedPurchases = { ...mergedPurchases, ...purchases }
       }
@@ -674,6 +674,12 @@ function App() {
       return
     }
 
+    // Purchases are needed for course cards in /home only.
+    // Skipping this on /admin avoids unnecessary purchase API calls there.
+    if (location.pathname !== '/home') {
+      return
+    }
+
     const loadPurchases = async () => {
       try {
         const purchases = await loadPurchasesForUser(currentUser)
@@ -684,7 +690,7 @@ function App() {
     }
 
     loadPurchases()
-  }, [currentUser])
+  }, [currentUser, location.pathname])
 
   // Stripe redirects back to /home after payment. Verify the session here and then
   // refresh purchases so both member and admin accounts see updated enrollment state.

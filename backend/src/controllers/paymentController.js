@@ -14,6 +14,15 @@ const getRequestIdToken = (req) => (
   req?.headers?.authorization?.replace(/^Bearer\s+/i, '') || ''
 )
 
+const isFirestorePermissionDenied = (error) => {
+  const firestoreStatus = String(error?.firestoreStatus || '').toUpperCase()
+  const message = String(error?.message || '').toLowerCase()
+  return (
+    firestoreStatus === 'PERMISSION_DENIED' ||
+    message.includes('missing or insufficient permissions')
+  )
+}
+
 function ensureStripeConfigured(res) {
   if (stripe) return true
 
@@ -254,9 +263,13 @@ export async function getUserPurchases(req, res) {
     })
   } catch (error) {
     console.error('User purchases read failed', error)
-    res.status(500).json({
+    const isPermissionDenied = isFirestorePermissionDenied(error)
+    const statusCode = isPermissionDenied ? 403 : Number(error?.statusCode) || 500
+    res.status(statusCode).json({
       ok: false,
-      error: error.message || 'Failed to fetch purchases.',
+      error: isPermissionDenied
+        ? 'Missing or insufficient permissions to read purchases.'
+        : error.message || 'Failed to fetch purchases.',
     })
   }
 }
