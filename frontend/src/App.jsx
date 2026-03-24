@@ -298,6 +298,17 @@ const loadPurchasesForUser = async (user) => {
   return mergedPurchases
 }
 
+// Protects UI cards when CMS image URLs are missing/deleted after deployment.
+// Current use: course, leadership, and placement image fallbacks.
+// Future production change: migrate to a shared <SafeImage/> component if fallback rules grow.
+const applyImageFallback = (event, fallbackSrc) => {
+  const target = event.currentTarget
+  if (!target || target.dataset.fallbackApplied === 'true') return
+
+  target.dataset.fallbackApplied = 'true'
+  target.src = fallbackSrc
+}
+
 // Reused loader for auth gating and protected home entry.
 // Future production change: this is the place to connect branded loading states or skeletons.
 function LoadingScreen({ label, detail }) {
@@ -1006,6 +1017,7 @@ function App() {
                 <img
                   src={member.image || '/images/tharun.png'}
                   alt={member.alt || member.name}
+                  onError={(event) => applyImageFallback(event, '/images/tharun.png')}
                   className="h-72 w-full object-cover object-top sm:h-80"
                 />
                 <div className="space-y-2 p-5">
@@ -1061,6 +1073,7 @@ function App() {
                   <img
                     src={course.image}
                     alt={`${course.title} course`}
+                    onError={(event) => applyImageFallback(event, '/images/logo-cits.svg')}
                     className="max-h-full max-w-full object-contain"
                   />
                 </div>
@@ -1198,6 +1211,7 @@ function App() {
                     <img
                       src={student.personImage || '/images/tharun.png'}
                       alt={`${student.name} profile`}
+                      onError={(event) => applyImageFallback(event, '/images/tharun.png')}
                       className="placement-person-image h-20 w-20 rounded-2xl border border-cyan-400/40 bg-slate-900 p-1 object-contain object-center"
                     />
                     <div>
@@ -1209,6 +1223,7 @@ function App() {
                     <img
                       src={student.companyImage || '/images/logo-cits.svg'}
                       alt={`${student.company} logo`}
+                      onError={(event) => applyImageFallback(event, '/images/logo-cits.svg')}
                       className="h-12 w-20 rounded-lg object-contain"
                     />
                   </div>

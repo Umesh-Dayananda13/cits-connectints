@@ -1,7 +1,11 @@
 import { loadStripe } from '@stripe/stripe-js'
 import { auth } from '../firebase'
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+// Keep localhost fallback only for local development.
+// In deployed environments, VITE_API_BASE_URL should point to the hosted backend.
+const localApiBaseUrl = 'http://localhost:5000'
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ||
+  (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? localApiBaseUrl : '')
 const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
 
 let stripePromise = null
