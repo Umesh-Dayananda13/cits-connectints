@@ -278,20 +278,32 @@ const getMemberName = (user) => {
 // Loads course-purchase records from both uid and legacy email-based paths.
 // This keeps older purchase records visible during uid/email migration.
 const loadPurchasesForUser = async (user) => {
-  const lookupIds = [...new Set([
-    user?.uid,
-    user?.email?.trim().toLowerCase(),
-  ].filter(Boolean))]
+  const primaryLookupId = user?.uid || ''
+  const legacyEmailLookupId = user?.email?.trim().toLowerCase() || ''
 
   let mergedPurchases = {}
-  for (const lookupId of lookupIds) {
+
+  if (primaryLookupId) {
     try {
-      const purchases = await getUserPurchases(lookupId)
+      const purchases = await getUserPurchases(primaryLookupId)
       if (purchases && typeof purchases === 'object') {
         mergedPurchases = { ...mergedPurchases, ...purchases }
       }
     } catch (error) {
-      console.error(`Failed to load purchases for ${lookupId}:`, error)
+      console.error(`Failed to load purchases for ${primaryLookupId}:`, error)
+    }
+  }
+
+  // Legacy email fallback: run only when different from uid to avoid duplicate calls.
+  // Permission failures here are expected in stricter rules, so keep this silent.
+  if (legacyEmailLookupId && legacyEmailLookupId !== primaryLookupId) {
+    try {
+      const purchases = await getUserPurchases(legacyEmailLookupId)
+      if (purchases && typeof purchases === 'object') {
+        mergedPurchases = { ...mergedPurchases, ...purchases }
+      }
+    } catch {
+      // No-op by design.
     }
   }
 

@@ -49,12 +49,13 @@ export async function createCheckoutSession(courseData) {
       headers,
       body: JSON.stringify(courseData),
     })
+    const payload = await response.json().catch(() => ({}))
 
-    if (!response.ok) {
-      throw new Error('Failed to create checkout session')
+    if (!response.ok || payload?.ok === false) {
+      throw new Error(payload?.error || 'Failed to create checkout session')
     }
 
-    const { data } = await response.json()
+    const { data } = payload
     return data.sessionId
   } catch (error) {
     console.error('Error creating checkout session:', error)
@@ -94,12 +95,13 @@ export async function verifyPayment({ sessionId, userId, courseId }) {
       headers,
       body: JSON.stringify(body),
     })
+    const payload = await response.json().catch(() => ({}))
 
-    if (!response.ok) {
-      throw new Error('Failed to verify payment')
+    if (!response.ok || payload?.ok === false) {
+      throw new Error(payload?.error || 'Failed to verify payment')
     }
 
-    return await response.json()
+    return payload
   } catch (error) {
     console.error('Error verifying payment:', error)
     throw error
@@ -117,12 +119,13 @@ export async function getUserPurchases(userId) {
       method: 'GET',
       headers,
     })
+    const payload = await response.json().catch(() => ({}))
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch purchases')
+    if (!response.ok || payload?.ok === false) {
+      throw new Error(payload?.error || 'Failed to fetch purchases')
     }
 
-    const { data } = await response.json()
+    const { data } = payload
     return data
   } catch (error) {
     console.error('Error fetching user purchases:', error)

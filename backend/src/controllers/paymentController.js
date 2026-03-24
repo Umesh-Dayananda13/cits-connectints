@@ -8,7 +8,21 @@ import {
 import { getFirestoreAccessToken } from '../lib/googleAccessToken.js'
 
 // Shared Stripe SDK client for all payment handlers in this controller.
-const stripe = new Stripe(config.stripe.secretKey)
+const stripe = config.stripe.secretKey ? new Stripe(config.stripe.secretKey) : null
+
+const getRequestIdToken = (req) => (
+  req?.headers?.authorization?.replace(/^Bearer\s+/i, '') || ''
+)
+
+function ensureStripeConfigured(res) {
+  if (stripe) return true
+
+  res.status(500).json({
+    ok: false,
+    error: 'Stripe secret key is not configured on the backend.',
+  })
+  return false
+}
 
 // Normalizes Stripe session payload into the same shape returned by Firestore
 // purchase documents so the admin UI can render from either source.
@@ -46,10 +60,6 @@ async function listAdminPurchasesFromStripe(limit) {
     .map((session) => mapStripeSessionToPurchase(session))
 }
 
-const getRequestIdToken = (req) => (
-  req?.headers?.authorization?.replace(/^Bearer\s+/i, '') || ''
-)
-
 const buildPurchaseRecord = ({ session, sessionId, userId, courseId }) => ({
   amount: Number(session.amount_total || 0) / 100, // Convert from cents
   courseId,
@@ -79,6 +89,8 @@ async function writePurchaseRecord({ courseId, purchaseRecord, req, userId }) {
 // Create checkout session for course purchase
 export async function createCheckoutSession(req, res) {
   try {
+    if (!ensureStripeConfigured(res)) return
+
     const { courseId, courseTitle, courseFee, userEmail, userId } = req.body
 
     if (!courseId || !courseFee || !userEmail) {
@@ -134,6 +146,8 @@ export async function createCheckoutSession(req, res) {
 // Verify payment and record purchase
 export async function verifyPayment(req, res) {
   try {
+    if (!ensureStripeConfigured(res)) return
+
     const { sessionId, userId, courseId } = req.body
 
     if (!sessionId) {
@@ -197,7 +211,15 @@ export async function verifyPayment(req, res) {
 // Get user purchases
 export async function getUserPurchases(req, res) {
   try {
+    if (!config.isFirebaseConfigured) {
+      return res.status(500).json({
+        ok: false,
+        error: config.firebaseConfigIssue || 'Firebase backend config is missing.',
+      })
+    }
+
     const { userId } = req.params
+    const idToken = getRequestIdToken(req)
 
     if (!userId) {
       return res.status(400).json({
@@ -206,10 +228,17 @@ export async function getUserPurchases(req, res) {
       })
     }
 
+    if (!idToken) {
+      return res.status(401).json({
+        ok: false,
+        error: 'Missing user authorization token.',
+      })
+    }
+
     const purchasesPath = `users/${userId}/purchases`
     const purchases = await listFirestoreDocuments({
       collectionPath: purchasesPath,
-      idToken: req.headers.authorization?.replace(/^Bearer\s+/i, ''),
+      idToken,
     })
     // Keep frontend lookup O(1) by returning an object keyed by courseId.
     const purchasesByCourseId = purchases.reduce((result, purchase) => {
@@ -224,6 +253,7 @@ export async function getUserPurchases(req, res) {
       data: purchasesByCourseId,
     })
   } catch (error) {
+    console.error('User purchases read failed', error)
     res.status(500).json({
       ok: false,
       error: error.message || 'Failed to fetch purchases.',
@@ -234,6 +264,8 @@ export async function getUserPurchases(req, res) {
 // Admin-only: list recent payments across all users.
 export async function getAdminPurchases(req, res) {
   try {
+    if (!ensureStripeConfigured(res)) return
+
     const requestedLimit = Number(req.query.limit || 100)
     const safeLimit = Number.isFinite(requestedLimit)
       ? Math.min(Math.max(Math.floor(requestedLimit), 1), 500)
@@ -314,6 +346,11 @@ export async function getAdminPurchases(req, res) {
 
 // Webhook to handle Stripe events
 export async function handleStripeWebhook(req, res) {
+  if (!stripe) {
+    res.status(500).send('Stripe secret key is not configured on the backend.')
+    return
+  }
+
   const sig = req.headers['stripe-signature']
   let event
 
