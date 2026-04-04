@@ -1673,30 +1673,29 @@ function App() {
                     <InstagramIcon className="h-5 w-5" />
                   </a>
                 </p>
-                <p className="flex items-center gap-3">
-                  <span>CITS Insta:</span>
-                  <a
-                    className="inline-flex items-center rounded-full border border-cyan-400/40 bg-cyan-500/10 p-2 text-cyan-200 transition hover:bg-cyan-500/20"
-                    href={contact.instagramUrl || 'https://www.instagram.com/connectints?igsh=b2xxNWp3djVxYm9o'}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label="CITS Instagram"
-                    title="CITS Instagram"
-                  >
-                    <InstagramIcon className="h-5 w-5" />
-                  </a>
-                </p>
                 <p>{supportHours}</p>
                 <p>{footer.responseTimeNote}</p>
               </div>
-              <a
-                href={`https://wa.me/${whatsappNumber}`}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-5 inline-flex rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:brightness-110"
-              >
-                Chat on WhatsApp
-              </a>
+              <div className="mt-5 flex flex-wrap gap-3 sm:flex-nowrap">
+                <a
+                  href={`https://wa.me/${whatsappNumber}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:brightness-110"
+                >
+                  Chat on WhatsApp
+                </a>
+                <a
+                  href={contact.instagramUrl || 'https://www.instagram.com/connectints?igsh=b2xxNWp3djVxYm9o'}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110"
+                  aria-label="Follow CITS on Instagram"
+                  title="Follow CITS on Instagram"
+                >
+                  Follow on Instagram
+                </a>
+              </div>
             </div>
           </div>
 
