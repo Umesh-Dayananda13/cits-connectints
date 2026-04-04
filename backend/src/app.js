@@ -12,13 +12,29 @@ import userProfileRoutes from './routes/userProfileRoutes.js'
 // Owns middleware and route mounting only.
 // Used by server.js as the process entry point.
 const app = express()
-const allowedOrigins = new Set(config.frontendOrigins)
+
+// CORS configuration for frontend communication
+const allowedOrigins = new Set(
+  config.frontendOrigins.map((origin) => origin.toLowerCase().trim()),
+)
+
 const corsOriginResolver = (origin, callback) => {
-  if (!origin || allowedOrigins.has(origin)) {
+  // Allow requests with no origin (like mobile apps or curl requests)
+  if (!origin) {
     callback(null, true)
     return
   }
 
+  const normalizedOrigin = origin.toLowerCase().trim()
+
+  if (allowedOrigins.has(normalizedOrigin)) {
+    callback(null, true)
+    return
+  }
+
+  console.error(
+    `CORS violation: Origin "${origin}" not allowed. Allowed origins: ${Array.from(allowedOrigins).join(', ')}`,
+  )
   callback(new Error(`Origin not allowed by CORS: ${origin}`))
 }
 

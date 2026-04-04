@@ -27,18 +27,23 @@ async function getAuthHeaders(headers = {}) {
 // Small JSON request wrapper so profile endpoints share one error path.
 // Future production change: replace with a generic API utility shared across services.
 async function requestJson(path, options = {}) {
-  const headers = await getAuthHeaders(options.headers || {})
-  const response = await fetch(buildApiUrl(path), {
-    ...options,
-    headers,
-  })
-  const payload = await response.json().catch(() => ({}))
+  try {
+    const headers = await getAuthHeaders(options.headers || {})
+    const response = await fetch(buildApiUrl(path), {
+      ...options,
+      headers,
+    })
+    const payload = await response.json().catch(() => ({}))
 
-  if (!response.ok || payload?.ok === false) {
-    throw new Error(payload?.error || `Request failed with status ${response.status}.`)
+    if (!response.ok || payload?.ok === false) {
+      throw new Error(payload?.error || `Request failed with status ${response.status}.`)
+    }
+
+    return payload
+  } catch (error) {
+    console.error(`API Error at ${path}:`, error)
+    throw error
   }
-
-  return payload
 }
 
 // Saves create-account profile details for admin visibility.

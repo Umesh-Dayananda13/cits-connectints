@@ -238,7 +238,7 @@ export default function AuthScreen({
                   <>
                     <div className="flex flex-col items-center text-center space-y-4">
                       <div className="inline-flex h-16 w-16 items-center justify-center rounded-full border-2 border-sky-400/30 bg-sky-500/10">
-                        <svg className="h-8 w-8 text-sky-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="h-8 w-8 text-sky-300 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
                       </div>
@@ -263,11 +263,16 @@ export default function AuthScreen({
                         </p>
                       </div>
 
-                      <div className="mt-3 rounded-[1.2rem] border border-yellow-400/30 bg-yellow-500/10 px-3 py-2">
-                        <p className="text-xs text-yellow-200">
-                          💡 <strong>Tip:</strong> Don't see the email? Check your <strong>spam or promotions folder</strong> and mark it as "Not Spam" to ensure future emails arrive in your inbox.
+                      <div className="mt-3 rounded-[1.2rem] border border-emerald-400/30 bg-emerald-500/10 px-3 py-2">
+                        <p className="text-xs text-emerald-200 flex items-center justify-center gap-2">
+                          <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                          Auto-checking every 2 seconds...
                         </p>
                       </div>
+
+                      <p className="text-center text-xs text-slate-400 mt-2">
+                        Once you verify your email, this page will automatically update. Or click "Check Verification" to manually check.
+                      </p>
                     </div>
 
                     {/* Inline feedback for verification */}
@@ -290,7 +295,7 @@ export default function AuthScreen({
                         disabled={isAuthBusy}
                         className="auth-primary-button rounded-[1.2rem] px-5 py-3 text-sm font-semibold text-slate-950 transition hover:brightness-110"
                       >
-                        {isAuthBusy ? 'Sending...' : 'Resend Verification Email'}
+                        {isAuthBusy ? 'Checking...' : 'Check Verification'}
                       </button>
 
                       <button

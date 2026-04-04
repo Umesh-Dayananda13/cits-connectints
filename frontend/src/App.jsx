@@ -363,6 +363,7 @@ function App() {
   const [resetEmail, setResetEmail] = useState('')
   const [isVerificationPending, setIsVerificationPending] = useState(false)
   const [unverifiedUserEmail, setUnverifiedUserEmail] = useState('')
+  const [unverifiedUserData, setUnverifiedUserData] = useState(null)
   const [authError, setAuthError] = useState('')
   const [authMessage, setAuthMessage] = useState('')
   const [isAuthReady, setIsAuthReady] = useState(!isFirebaseConfigured)
@@ -455,6 +456,64 @@ function App() {
     return unsubscribe
   }, [currentUser, isAuthReady])
 
+  // Auto-detect email verification and redirect when verified
+  // This checks the verification status periodically and when the page regains focus
+  useEffect(() => {
+    if (!isVerificationPending || !auth || !unverifiedUserData) {
+      return undefined
+    }
+
+    // Function to check verification status and redirect if verified
+    const checkAndNavigateIfVerified = async () => {
+      try {
+        // Refresh the unverified user's verification status from Firebase
+        await unverifiedUserData.reload()
+
+        if (unverifiedUserData.emailVerified) {
+          // Email is now verified - sign in the user
+          try {
+            const userCredential = await signInWithEmailAndPassword(
+              auth,
+              unverifiedUserData.email,
+              authForm.password,
+            )
+
+            // User is now authenticated and verified
+            setIsVerificationPending(false)
+            setUnverifiedUserEmail('')
+            setUnverifiedUserData(null)
+            setAccessMode('member')
+            setMemberName(getMemberName(userCredential.user))
+            navigate('/home')
+          } catch (loginError) {
+            console.error('Failed to auto-login after verification:', loginError)
+            // Navigation will happen when user manually signs in
+          }
+        }
+      } catch (error) {
+        console.error('Failed to check email verification status:', error)
+      }
+    }
+
+    // Check immediately when this effect runs
+    checkAndNavigateIfVerified()
+
+    // Check every 2 seconds while verification is pending
+    const interval = setInterval(checkAndNavigateIfVerified, 2000)
+
+    // Also check when the page regains focus (user might have verified in another tab)
+    const handleFocus = () => {
+      checkAndNavigateIfVerified()
+    }
+
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('focus', handleFocus)
+    }
+  }, [isVerificationPending, unverifiedUserData, navigate, auth, authForm.password])
+
   // Keep field editing local so the auth form feels responsive before any network request is made.
   const handleAuthFieldChange = (event) => {
     const { name, value } = event.target
@@ -526,11 +585,16 @@ function App() {
         await updateProfile(userCredential.user, { displayName: trimmedName })
         // Save explicit profile fields so admin can view registered users (name/email/phone).
         // Future production change: this can include address, consent flags, or referral metadata.
-        await saveUserProfile({
-          email,
-          name: trimmedName,
-          phone: trimmedPhone,
-        })
+        try {
+          await saveUserProfile({
+            email,
+            name: trimmedName,
+            phone: trimmedPhone,
+          })
+        } catch (profileError) {
+          console.error('Profile save warning (non-blocking):', profileError)
+          // Continue anyway - don't fail signup if profile save fails
+        }
         
         // Send email verification
         try {
@@ -549,6 +613,7 @@ function App() {
         setMemberName(trimmedName)
         setIsVerificationPending(true)
         setUnverifiedUserEmail(email)
+        setUnverifiedUserData(userCredential.user)
         setAuthMessage('Account created! A verification email has been sent. Please check your inbox and verify your email. After verification, you can sign in.')
         setAuthError('')
         // Don't navigate - stay on verification screen
@@ -584,6 +649,7 @@ function App() {
       if (error?.code) {
         setAuthError(getFirebaseAuthMessage(error))
       } else {
+        console.error('Auth error:', error)
         setAuthError(error?.message || 'Could not finish account setup. Please try again.')
       }
     } finally {
@@ -649,7 +715,7 @@ function App() {
     }
   }
 
-  // Handle resend verification email - needs to create a temporary auth session
+  // Handle check verification / resend verification email
   const handleResendVerificationEmail = async () => {
     if (!isVerificationPending || !unverifiedUserEmail) {
       setAuthError('Please create an account first.')
@@ -661,14 +727,29 @@ function App() {
     setAuthMessage('')
 
     try {
-      // Try to sign in silently to get updated user state, then send verification
+      // Try to sign in silently to get updated user state and check verification
       const userCredential = await signInWithEmailAndPassword(auth, unverifiedUserEmail, authForm.password)
+      
+      // Check if now verified
+      if (userCredential.user.emailVerified) {
+        // Verified! Keep the user signed in and navigate
+        setIsVerificationPending(false)
+        setUnverifiedUserEmail('')
+        setUnverifiedUserData(null)
+        setAccessMode('member')
+        setMemberName(getMemberName(userCredential.user))
+        setAuthMessage('Email verified! Welcome to CITS.')
+        navigate('/home')
+        return
+      }
+      
+      // Not verified yet - offer to resend
       await sendEmailVerification(userCredential.user)
       
       // Sign out again to keep user in verification pending state
       await signOut(auth)
       
-      setAuthMessage('Verification email resent! Check your inbox and verify your email. After verification, sign in to access your account.')
+      setAuthMessage('Verification email resent! Check your inbox and verify your email. After verification, click "Check Verification" again.')
       setAccessMode('')
       setCurrentUser(null)
     } catch (error) {
