@@ -47,9 +47,15 @@ export default function AuthScreen({
   authError,
   authMessage,
   isAuthBusy,
+  resetEmail,
+  isVerificationPending,
+  unverifiedUserEmail,
   onChangeMode,
   onFieldChange,
+  onResetEmailChange,
   onSubmit,
+  onForgotPasswordSubmit,
+  onResendVerificationEmail,
 }) {
   // This component stays presentation-only on purpose.
   // Current auth logic lives in App.jsx, which makes future production upgrades such as
@@ -175,7 +181,7 @@ export default function AuthScreen({
                   disabled={isAuthBusy}
                   onClick={() => onChangeMode('signin')}
                   className={`rounded-[0.9rem] px-4 py-3 text-sm font-semibold transition ${
-                    !isSignUp ? 'bg-white text-slate-950 shadow-lg' : 'text-slate-300 hover:text-white'
+                    !isSignUp && authMode !== 'forgot-password' ? 'bg-white text-slate-950 shadow-lg' : 'text-slate-300 hover:text-white'
                   }`}
                 >
                   Sign In
@@ -194,10 +200,14 @@ export default function AuthScreen({
 
               <div className="auth-form-copy max-w-md">
                 <h2 className="text-[1.8rem] font-black leading-none text-white sm:text-[2rem]">
-                  {isSignUp ? 'Create account' : 'Welcome back'}
+                  {authMode === 'forgot-password'
+                    ? 'Reset Password'
+                    : isSignUp ? 'Create account' : 'Welcome back'}
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-slate-300">
-                  {isSignUp
+                  {authMode === 'forgot-password'
+                    ? 'Enter your email address and we\'ll send you a link to reset your password.'
+                    : isSignUp
                     ? 'Create your learner account and continue into the main website.'
                     : 'Use your email and password to continue.'}
                 </p>
@@ -221,125 +231,265 @@ export default function AuthScreen({
               </div>
             </div>
 
-            <form onSubmit={onSubmit} className="mt-4 flex flex-1 flex-col gap-3">
+            <form onSubmit={authMode === 'forgot-password' ? onForgotPasswordSubmit : onSubmit} className="mt-4 flex flex-1 flex-col gap-3">
               <div className="auth-form-stage flex flex-1 flex-col rounded-[1.45rem] border border-white/10 px-4 py-4 sm:px-5 sm:py-5">
-                {/* Add any future production-only fields here, then validate them in App.jsx. */}
-                {/* Sign-up needs an extra name field, while sign-in stays more compact. */}
-                <div className={`grid gap-3 ${isSignUp ? 'sm:grid-cols-2' : ''}`}>
-                  {isSignUp && (
+                {isVerificationPending ? (
+                  // Email verification pending UI
+                  <>
+                    <div className="flex flex-col items-center text-center space-y-4">
+                      <div className="inline-flex h-16 w-16 items-center justify-center rounded-full border-2 border-sky-400/30 bg-sky-500/10">
+                        <svg className="h-8 w-8 text-sky-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">Verify Your Email</h3>
+                        <p className="mt-2 text-sm text-slate-300">
+                          We sent a verification link to:
+                        </p>
+                        <p className="mt-1 text-sm font-medium text-sky-200 break-all">
+                          {unverifiedUserEmail}
+                        </p>
+                      </div>
+
+                      <p className="max-w-sm text-xs text-slate-400 leading-relaxed">
+                        Click the link in the email to verify your account. Once verified, you can sign in to access all features.
+                      </p>
+
+                      <div className="mt-3 rounded-[1.2rem] border border-yellow-400/30 bg-yellow-500/10 px-3 py-2">
+                        <p className="text-xs text-yellow-200">
+                          💡 <strong>Tip:</strong> Don't see the email? Check your <strong>spam or promotions folder</strong> and mark it as "Not Spam" to ensure future emails arrive in your inbox.
+                        </p>
+                      </div>
+
+                      <div className="mt-3 rounded-[1.2rem] border border-yellow-400/30 bg-yellow-500/10 px-3 py-2">
+                        <p className="text-xs text-yellow-200">
+                          💡 <strong>Tip:</strong> Don't see the email? Check your <strong>spam or promotions folder</strong> and mark it as "Not Spam" to ensure future emails arrive in your inbox.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Inline feedback for verification */}
+                    {(authError || authMessage) && (
+                      <p
+                        className={`mt-4 rounded-[1.2rem] border px-4 py-3 text-sm ${
+                          authError
+                            ? 'border-rose-400/30 bg-rose-500/10 text-rose-200'
+                            : 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200'
+                        }`}
+                      >
+                        {authError || authMessage}
+                      </p>
+                    )}
+
+                    <div className="auth-actions mt-auto grid gap-3 pt-4">
+                      <button
+                        type="button"
+                        onClick={onResendVerificationEmail}
+                        disabled={isAuthBusy}
+                        className="auth-primary-button rounded-[1.2rem] px-5 py-3 text-sm font-semibold text-slate-950 transition hover:brightness-110"
+                      >
+                        {isAuthBusy ? 'Sending...' : 'Resend Verification Email'}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => onChangeMode('signin')}
+                        className="rounded-[1.2rem] border border-slate-400/30 px-5 py-3 text-sm font-semibold text-slate-300 transition hover:text-white hover:border-slate-300"
+                      >
+                        Already Verified? Sign In
+                      </button>
+                    </div>
+
+                    <p className="mt-2 text-center text-xs text-slate-500">
+                      Email verification is required to access your account. Once verified, you can sign in.
+                    </p>
+                  </>
+                ) : authMode === 'forgot-password' ? (
+                  // Forgot password form - simple email only
+                  <>
                     <label className="auth-input-wrap block rounded-[1.2rem] border border-white/10 px-4 pb-3 pt-3">
                       <span className="auth-input-label block text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
-                        Full Name
+                        Email Address
                       </span>
                       <input
-                        type="text"
-                        name="name"
-                        value={authForm.name}
-                        onChange={onFieldChange}
-                        placeholder="Your full name"
+                        type="email"
+                        value={resetEmail}
+                        onChange={(e) => onResetEmailChange(e.target.value)}
+                        placeholder="you@example.com"
                         className="auth-input-field mt-2 w-full text-slate-100 outline-none transition"
                       />
                     </label>
-                  )}
 
-                  <label className="auth-input-wrap block rounded-[1.2rem] border border-white/10 px-4 pb-3 pt-3">
-                    <span className="auth-input-label block text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
-                      Email
-                    </span>
-                    <input
-                      type="email"
-                      name="email"
-                      value={authForm.email}
-                      onChange={onFieldChange}
-                      placeholder="you@example.com"
-                      className="auth-input-field mt-2 w-full text-slate-100 outline-none transition"
-                    />
-                  </label>
+                    {/* Inline feedback for forgot password */}
+                    {(authError || authMessage) && (
+                      <p
+                        className={`mt-3 rounded-[1.2rem] border px-4 py-3 text-sm ${
+                          authError
+                            ? 'border-rose-400/30 bg-rose-500/10 text-rose-200'
+                            : 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200'
+                        }`}
+                      >
+                        {authError || authMessage}
+                      </p>
+                    )}
 
-                  {isSignUp && (
-                    <label className="auth-input-wrap block rounded-[1.2rem] border border-white/10 px-4 pb-3 pt-3">
-                      <span className="auth-input-label block text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
-                        Phone Number
-                      </span>
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={authForm.phone}
-                        onChange={onFieldChange}
-                        placeholder="+91 98765 43210"
-                        className="auth-input-field mt-2 w-full text-slate-100 outline-none transition"
-                      />
-                    </label>
-                  )}
-                </div>
+                    <div className="auth-actions mt-auto grid gap-3 pt-3">
+                      <button
+                        type="submit"
+                        disabled={isAuthBusy}
+                        className="auth-primary-button rounded-[1.2rem] px-5 py-3 text-sm font-semibold text-slate-950 transition hover:brightness-110"
+                      >
+                        {isAuthBusy ? 'Sending...' : 'Send Reset Link'}
+                      </button>
+                    </div>
 
-                <div className={`mt-3 grid gap-3 ${isSignUp ? 'sm:grid-cols-2' : ''}`}>
-                  <label className="auth-input-wrap block rounded-[1.2rem] border border-white/10 px-4 pb-3 pt-3">
-                    <span className="auth-input-label block text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
-                      Password
-                    </span>
-                    <input
-                      type="password"
-                      name="password"
-                      value={authForm.password}
-                      onChange={onFieldChange}
-                      placeholder="Enter your password"
-                      className="auth-input-field mt-2 w-full text-slate-100 outline-none transition"
-                    />
-                  </label>
+                    <p className="mt-2 text-center text-xs text-slate-400">
+                      We'll send you an email with instructions to reset your password.
+                    </p>
+                  </>
+                ) : (
+                  // Regular sign-in/sign-up form
+                  <>
+                    {/* Add any future production-only fields here, then validate them in App.jsx. */}
+                    {/* Sign-up needs an extra name field, while sign-in stays more compact. */}
+                    <div className={`grid gap-3 ${isSignUp ? 'sm:grid-cols-2' : ''}`}>
+                      {isSignUp && (
+                        <label className="auth-input-wrap block rounded-[1.2rem] border border-white/10 px-4 pb-3 pt-3">
+                          <span className="auth-input-label block text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                            Full Name
+                          </span>
+                          <input
+                            type="text"
+                            name="name"
+                            value={authForm.name}
+                            onChange={onFieldChange}
+                            placeholder="Your full name"
+                            className="auth-input-field mt-2 w-full text-slate-100 outline-none transition"
+                          />
+                        </label>
+                      )}
 
-                  {isSignUp && (
-                    <label className="auth-input-wrap block rounded-[1.2rem] border border-white/10 px-4 pb-3 pt-3">
-                      <span className="auth-input-label block text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
-                        Confirm Password
-                      </span>
-                      <input
-                        type="password"
-                        name="confirmPassword"
-                        value={authForm.confirmPassword}
-                        onChange={onFieldChange}
-                        placeholder="Repeat password"
-                        className="auth-input-field mt-2 w-full text-slate-100 outline-none transition"
-                      />
-                    </label>
-                  )}
-                </div>
+                      <label className="auth-input-wrap block rounded-[1.2rem] border border-white/10 px-4 pb-3 pt-3">
+                        <span className="auth-input-label block text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                          Email
+                        </span>
+                        <input
+                          type="email"
+                          name="email"
+                          value={authForm.email}
+                          onChange={onFieldChange}
+                          placeholder="you@example.com"
+                          className="auth-input-field mt-2 w-full text-slate-100 outline-none transition"
+                        />
+                      </label>
 
-                {isSignUp ? (
-                  // Keep policy copy close to input to reduce signup friction.
-                  // Future production change: source this from shared policy config if rules change often.
-                  <p className="mt-2 text-xs text-slate-400">
-                    Password must be 8+ characters and include uppercase, lowercase, number, and special character.
-                  </p>
-                ) : null}
+                      {isSignUp && (
+                        <label className="auth-input-wrap block rounded-[1.2rem] border border-white/10 px-4 pb-3 pt-3">
+                          <span className="auth-input-label block text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                            Phone Number
+                          </span>
+                          <input
+                            type="tel"
+                            name="phone"
+                            value={authForm.phone}
+                            onChange={onFieldChange}
+                            placeholder="+91 98765 43210"
+                            className="auth-input-field mt-2 w-full text-slate-100 outline-none transition"
+                          />
+                        </label>
+                      )}
+                    </div>
 
-                {/* Inline feedback is shared by local validation and Firebase responses from App.jsx. */}
-                {(authError || authMessage) && (
-                  <p
-                    className={`mt-3 rounded-[1.2rem] border px-4 py-3 text-sm ${
-                      authError
-                        ? 'border-rose-400/30 bg-rose-500/10 text-rose-200'
-                        : 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200'
-                    }`}
-                  >
-                    {authError || authMessage}
-                  </p>
+                    <div className={`mt-3 grid gap-3 ${isSignUp ? 'sm:grid-cols-2' : ''}`}>
+                      <label className="auth-input-wrap block rounded-[1.2rem] border border-white/10 px-4 pb-3 pt-3">
+                        <span className="auth-input-label block text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                          Password
+                        </span>
+                        <input
+                          type="password"
+                          name="password"
+                          value={authForm.password}
+                          onChange={onFieldChange}
+                          placeholder="Enter your password"
+                          className="auth-input-field mt-2 w-full text-slate-100 outline-none transition"
+                        />
+                      </label>
+
+                      {isSignUp && (
+                        <label className="auth-input-wrap block rounded-[1.2rem] border border-white/10 px-4 pb-3 pt-3">
+                          <span className="auth-input-label block text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                            Confirm Password
+                          </span>
+                          <input
+                            type="password"
+                            name="confirmPassword"
+                            value={authForm.confirmPassword}
+                            onChange={onFieldChange}
+                            placeholder="Repeat password"
+                            className="auth-input-field mt-2 w-full text-slate-100 outline-none transition"
+                          />
+                        </label>
+                      )}
+                    </div>
+
+                    {isSignUp ? (
+                      // Keep policy copy close to input to reduce signup friction.
+                      // Future production change: source this from shared policy config if rules change often.
+                      <>
+                        <p className="mt-2 text-xs text-slate-400">
+                          Password must be 8+ characters and include uppercase, lowercase, number, and special character.
+                        </p>
+                        <div className="mt-3 rounded-[1.2rem] border border-sky-400/30 bg-sky-500/10 px-3 py-2">
+                          <p className="text-xs text-sky-200">
+                            ✓ After creating your account, you'll receive a <strong>verification email</strong>. Click the link to verify and access the platform.
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      // Forgot password link for sign-in form
+                      <div className="mt-3 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => onChangeMode('forgot-password')}
+                          disabled={isAuthBusy}
+                          className="text-xs font-semibold text-sky-300 hover:text-sky-200 transition"
+                        >
+                          Forgot password?
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Inline feedback is shared by local validation and Firebase responses from App.jsx. */}
+                    {(authError || authMessage) && (
+                      <p
+                        className={`mt-3 rounded-[1.2rem] border px-4 py-3 text-sm ${
+                          authError
+                            ? 'border-rose-400/30 bg-rose-500/10 text-rose-200'
+                            : 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200'
+                        }`}
+                      >
+                        {authError || authMessage}
+                      </p>
+                    )}
+
+                    {/* Button text stays route-driven, so future auth modes should be added through authMode. */}
+                    <div className="auth-actions mt-auto grid gap-3 pt-3">
+                      <button
+                        type="submit"
+                        disabled={isAuthBusy}
+                        className="auth-primary-button rounded-[1.2rem] px-5 py-3 text-sm font-semibold text-slate-950 transition hover:brightness-110"
+                      >
+                        {isAuthBusy ? (isSignUp ? 'Creating...' : 'Signing In...') : (isSignUp ? 'Create Account' : 'Sign In')}
+                      </button>
+                    </div>
+
+                    <p className="mt-2 text-center text-xs text-slate-400">
+                      Secure email and password flow powered by Firebase, backed by Google.
+                    </p>
+                  </>
                 )}
-
-                {/* Button text stays route-driven, so future auth modes should be added through authMode. */}
-                <div className="auth-actions mt-auto grid gap-3 pt-3">
-                  <button
-                    type="submit"
-                    disabled={isAuthBusy}
-                    className="auth-primary-button rounded-[1.2rem] px-5 py-3 text-sm font-semibold text-slate-950 transition hover:brightness-110"
-                  >
-                    {isAuthBusy ? (isSignUp ? 'Creating...' : 'Signing In...') : (isSignUp ? 'Create Account' : 'Sign In')}
-                  </button>
-                </div>
-
-                <p className="mt-2 text-center text-xs text-slate-400">
-                  Secure email and password flow powered by Firebase, backed by Google.
-                </p>
               </div>
 
               <p className="text-center text-[11px] uppercase tracking-[0.24em] text-slate-500">

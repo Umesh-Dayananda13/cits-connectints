@@ -2,6 +2,8 @@ import { Suspense, lazy, useEffect, useState } from 'react'
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
+  sendEmailVerification,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
@@ -217,6 +219,7 @@ const firebaseAuthMessages = {
   'auth/invalid-email': 'Enter a valid email address.',
   'auth/network-request-failed': 'Network error. Check your connection and try again.',
   'auth/too-many-requests': 'Too many attempts. Try again later.',
+  'auth/user-not-found': 'No account found with this email. Please check and try again.',
   'auth/weak-password': 'Password must be stronger: 8+ chars, uppercase, lowercase, number, and special character.',
 }
 
@@ -357,6 +360,9 @@ function App() {
     password: '',
     confirmPassword: '',
   })
+  const [resetEmail, setResetEmail] = useState('')
+  const [isVerificationPending, setIsVerificationPending] = useState(false)
+  const [unverifiedUserEmail, setUnverifiedUserEmail] = useState('')
   const [authError, setAuthError] = useState('')
   const [authMessage, setAuthMessage] = useState('')
   const [isAuthReady, setIsAuthReady] = useState(!isFirebaseConfigured)
@@ -374,7 +380,8 @@ function App() {
   const [userPurchases, setUserPurchases] = useState({})
   // Current routing keeps auth on /login and /signup, with the protected site on /home.
   // Future production change: expand this route-driven mode if onboarding or member dashboards split out.
-  const authMode = location.pathname === '/signup' ? 'signup' : 'signin'
+  const isForgotPasswordPath = location.pathname === '/forgot-password'
+  const authMode = isForgotPasswordPath ? 'forgot-password' : location.pathname === '/signup' ? 'signup' : 'signin'
   const homeAccessLabel = 'Member Access'
   const homeVisitorLabel = `Welcome, ${memberName || 'Member'}`
   const isAdmin = areAdminEmailsConfigured && isAdminEmail(currentUser?.email)
@@ -524,16 +531,55 @@ function App() {
           name: trimmedName,
           phone: trimmedPhone,
         })
+        
+        // Send email verification
+        try {
+          await sendEmailVerification(userCredential.user)
+        } catch (verificationError) {
+          console.error('Failed to send verification email:', verificationError)
+        }
+        
+        // Sign out immediately - user must verify email first before accessing the platform
+        try {
+          await signOut(auth)
+        } catch (signOutError) {
+          console.error('Failed to sign out after signup:', signOutError)
+        }
+        
         setMemberName(trimmedName)
-        setAuthMessage('Account created. Opening the main website.')
+        setIsVerificationPending(true)
+        setUnverifiedUserEmail(email)
+        setAuthMessage('Account created! A verification email has been sent. Please check your inbox and verify your email. After verification, you can sign in.')
+        setAuthError('')
+        // Don't navigate - stay on verification screen
+        setAccessMode('')
+        setCurrentUser(null)
       } else {
         const userCredential = await signInWithEmailAndPassword(auth, email, password)
+        
+        // Check if email is verified
+        if (!userCredential.user.emailVerified) {
+          // Sign out immediately - don't allow access without verification
+          try {
+            await signOut(auth)
+          } catch (signOutError) {
+            console.error('Failed to sign out:', signOutError)
+          }
+          
+          setIsVerificationPending(true)
+          setUnverifiedUserEmail(email)
+          setAuthError('Please verify your email before signing in. We sent you a verification link.')
+          setAccessMode('')
+          setCurrentUser(null)
+          setIsAuthBusy(false)
+          return
+        }
+        
         setMemberName(getMemberName(userCredential.user))
         setAuthMessage('Sign-in successful. Opening the main website.')
+        setAccessMode('member')
+        navigate('/home')
       }
-
-      setAccessMode('member')
-      navigate('/home')
     } catch (error) {
       if (error?.code) {
         setAuthError(getFirebaseAuthMessage(error))
@@ -552,7 +598,90 @@ function App() {
 
     setAuthError('')
     setAuthMessage('')
-    navigate(mode === 'signup' ? '/signup' : '/login')
+    setResetEmail('')
+    if (mode === 'signup') {
+      navigate('/signup')
+    } else if (mode === 'forgot-password') {
+      navigate('/forgot-password')
+    } else {
+      navigate('/login')
+    }
+  }
+
+  // Handle forgot password email submission
+  const handleForgotPasswordSubmit = async (event) => {
+    event.preventDefault()
+
+    const email = resetEmail.trim()
+
+    if (!email) {
+      setAuthError('Email is required.')
+      return
+    }
+
+    if (!auth || !isFirebaseConfigured) {
+      setAuthError(firebaseConfigIssue || 'Firebase is not configured.')
+      return
+    }
+
+    setIsAuthBusy(true)
+    setAuthError('')
+    setAuthMessage('')
+
+    try {
+      await sendPasswordResetEmail(auth, email)
+      setAuthMessage(
+        'Password reset email sent! Check your inbox for instructions to reset your password.',
+      )
+      setResetEmail('')
+      // Redirect back to signin after a short delay
+      setTimeout(() => {
+        navigate('/login')
+      }, 3000)
+    } catch (error) {
+      if (error?.code) {
+        setAuthError(getFirebaseAuthMessage(error))
+      } else {
+        setAuthError(error?.message || 'Could not send reset email. Please try again.')
+      }
+    } finally {
+      setIsAuthBusy(false)
+    }
+  }
+
+  // Handle resend verification email - needs to create a temporary auth session
+  const handleResendVerificationEmail = async () => {
+    if (!isVerificationPending || !unverifiedUserEmail) {
+      setAuthError('Please create an account first.')
+      return
+    }
+
+    setIsAuthBusy(true)
+    setAuthError('')
+    setAuthMessage('')
+
+    try {
+      // Try to sign in silently to get updated user state, then send verification
+      const userCredential = await signInWithEmailAndPassword(auth, unverifiedUserEmail, authForm.password)
+      await sendEmailVerification(userCredential.user)
+      
+      // Sign out again to keep user in verification pending state
+      await signOut(auth)
+      
+      setAuthMessage('Verification email resent! Check your inbox and verify your email. After verification, sign in to access your account.')
+      setAccessMode('')
+      setCurrentUser(null)
+    } catch (error) {
+      if (error?.code === 'auth/too-many-requests') {
+        setAuthError('Too many requests. Please try again later.')
+      } else if (error?.code === 'auth/invalid-credential') {
+        setAuthError('Could not verify credentials. Please check your password.')
+      } else {
+        setAuthError(error?.message || 'Could not send verification email. Please try again.')
+      }
+    } finally {
+      setIsAuthBusy(false)
+    }
   }
 
   // Logout resets local UI state first, then ends the Firebase session if one exists.
@@ -791,9 +920,15 @@ function App() {
       authError={authError}
       authMessage={authMessage}
       isAuthBusy={isAuthBusy}
+      resetEmail={resetEmail}
+      isVerificationPending={isVerificationPending}
+      unverifiedUserEmail={unverifiedUserEmail}
       onChangeMode={handleAuthModeChange}
       onFieldChange={handleAuthFieldChange}
+      onResetEmailChange={(value) => setResetEmail(value)}
       onSubmit={handleAuthSubmit}
+      onForgotPasswordSubmit={handleForgotPasswordSubmit}
+      onResendVerificationEmail={handleResendVerificationEmail}
     />
   )
 
@@ -1460,14 +1595,15 @@ function App() {
 
   return (
     <>
-      {/* Router keeps login, signup, and home addressable in this preview app. */}
+      {/* Router keeps login, signup, forgot-password, and home addressable in this preview app. */}
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/login" element={accessMode ? <Navigate to="/home" replace /> : authPage} />
-        <Route path="/signup" element={accessMode ? <Navigate to="/home" replace /> : authPage} />
-        <Route path="/home" element={accessMode ? homePage : <Navigate to="/login" replace />} />
-        <Route path="/admin" element={accessMode ? adminPage : <Navigate to="/login" replace />} />
-        <Route path="*" element={<Navigate to={accessMode ? '/home' : '/login'} replace />} />
+        <Route path="/login" element={accessMode === 'member' && currentUser?.emailVerified ? <Navigate to="/home" replace /> : authPage} />
+        <Route path="/signup" element={accessMode === 'member' && currentUser?.emailVerified ? <Navigate to="/home" replace /> : authPage} />
+        <Route path="/forgot-password" element={accessMode === 'member' && currentUser?.emailVerified ? <Navigate to="/home" replace /> : authPage} />
+        <Route path="/home" element={accessMode === 'member' && currentUser?.emailVerified ? homePage : <Navigate to="/login" replace />} />
+        <Route path="/admin" element={accessMode === 'member' && currentUser?.emailVerified && isAdmin ? adminPage : <Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to={accessMode === 'member' && currentUser?.emailVerified ? '/home' : '/login'} replace />} />
       </Routes>
 
       {/* Payment Modal for course enrollment */}
