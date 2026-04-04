@@ -237,6 +237,20 @@ const defaultFooter = {
   builtForText: 'Built for practical learning, verification, and placement outcomes.',
 }
 
+const defaultAuthPageContent = {
+  heroTypingPhrases: [
+    'ServiceNow careers',
+    'Oracle EBS growth',
+    'QA job readiness',
+    'interview-winning confidence',
+  ],
+  authImpactStats: [
+    { label: 'Students Guided', value: '1000+' },
+    { label: 'Successfully Placed', value: '850+' },
+    { label: 'Live Sessions', value: '250+' },
+  ],
+}
+
 const isPlainObject = (value) => Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 
 const pickArray = (value, fallback) => (Array.isArray(value) ? value : fallback)
@@ -252,6 +266,7 @@ const normalizeRoadmapSteps = (steps) => steps.map((step, index) => normalizeRoa
 
 export const defaultSiteContent = {
   about: defaultAbout,
+  authPageContent: defaultAuthPageContent,
   blogPreviews: defaultBlogPreviews,
   contact: defaultContact,
   courseIncludes: defaultCourseIncludes,
@@ -280,6 +295,14 @@ export const mergeSiteContent = (remoteContent = {}) => ({
       paragraphs: pickArray(remoteContent.about?.paragraphs, defaultSiteContent.about.paragraphs),
     }
     : defaultSiteContent.about,
+  authPageContent: isPlainObject(remoteContent.authPageContent)
+    ? {
+      ...defaultSiteContent.authPageContent,
+      ...remoteContent.authPageContent,
+      heroTypingPhrases: pickArray(remoteContent.authPageContent?.heroTypingPhrases, defaultSiteContent.authPageContent.heroTypingPhrases),
+      authImpactStats: pickArray(remoteContent.authPageContent?.authImpactStats, defaultSiteContent.authPageContent.authImpactStats),
+    }
+    : defaultSiteContent.authPageContent,
   blogPreviews: pickArray(remoteContent.blogPreviews, defaultSiteContent.blogPreviews),
   contact: isPlainObject(remoteContent.contact)
     ? { ...defaultSiteContent.contact, ...remoteContent.contact }

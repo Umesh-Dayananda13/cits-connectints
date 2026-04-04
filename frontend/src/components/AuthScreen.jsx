@@ -3,23 +3,6 @@ import { useEffect, useState } from 'react'
 // AuthScreen is UI-only.
 // Used by App.jsx on /login and /signup while App.jsx keeps all Firebase auth logic.
 
-// Marketing phrases for the animated hero line.
-// Current use: visual brand motion on the auth landing page.
-// Future production change: replace these with CMS/API content here without touching form logic.
-const heroTypingPhrases = [
-  'ServiceNow careers',
-  'Oracle EBS growth',
-  'QA job readiness',
-  'interview-winning confidence',
-]
-
-// Impact stats to showcase CITS achievements
-const impactStats = [
-  { label: 'Students Guided', value: '1000+' },
-  { label: 'Successfully Placed', value: '850+' },
-  { label: 'Live Sessions', value: '250+' },
-]
-
 function TrustShieldIcon() {
   // Local icon used only inside the auth trust strip.
   return (
@@ -50,6 +33,8 @@ export default function AuthScreen({
   resetEmail,
   isVerificationPending,
   unverifiedUserEmail,
+  heroTypingPhrases,
+  authImpactStats,
   onChangeMode,
   onFieldChange,
   onResetEmailChange,
@@ -150,7 +135,7 @@ export default function AuthScreen({
                 CITS Impact
               </p>
               <div className="grid grid-cols-3 gap-6">
-                {impactStats.map((stat, idx) => (
+                {authImpactStats.map((stat, idx) => (
                   <div key={stat.label} className="flex flex-col items-center text-center" style={{animationDelay: `${idx * 0.1}s`}}>
                     <p className="text-3xl font-black text-cyan-200">{stat.value}</p>
                     <p className="mt-2 text-xs font-semibold text-slate-300 leading-tight">{stat.label}</p>

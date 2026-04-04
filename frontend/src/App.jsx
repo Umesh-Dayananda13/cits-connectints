@@ -403,6 +403,7 @@ function App() {
   // subscribeSiteContent reads that same document, and /home renders from it here.
   const {
     about,
+    authPageContent,
     blogPreviews: siteBlogPreviews,
     contact,
     courseIncludes: siteCourseIncludes,
@@ -1018,6 +1019,8 @@ function App() {
       resetEmail={resetEmail}
       isVerificationPending={isVerificationPending}
       unverifiedUserEmail={unverifiedUserEmail}
+      heroTypingPhrases={authPageContent.heroTypingPhrases}
+      authImpactStats={authPageContent.authImpactStats}
       onChangeMode={handleAuthModeChange}
       onFieldChange={handleAuthFieldChange}
       onResetEmailChange={(value) => setResetEmail(value)}

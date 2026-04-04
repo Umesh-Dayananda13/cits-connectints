@@ -19,6 +19,7 @@ const adminTabs = [
   { id: 'courses', label: 'Courses' },
   { id: 'placements', label: 'Placements' },
   { id: 'leadership', label: 'Leadership' },
+  { id: 'authpage', label: 'Auth Page' },
   { id: 'sections', label: 'Sections' },
   { id: 'faq', label: 'FAQ' },
   { id: 'payments', label: 'Payments' },
@@ -1066,6 +1067,121 @@ function AdminPanel({ onLogout, userEmail }) {
                 >
                   Add FAQ Item
                 </button>
+              </SectionShell>
+            ) : null}
+
+            {activeTab === 'authpage' ? (
+              <SectionShell title="Auth Page Content" description="Edit login page hero message phrases and impact statistics.">
+                <div className="space-y-8">
+                  {/* Hero Phrases */}
+                  <div className="space-y-4">
+                    <div className="border-b border-slate-700 pb-3">
+                      <h3 className="text-sm font-semibold text-slate-200">Hero Typing Phrases</h3>
+                      <p className="mt-1 text-xs text-slate-400">Phrases that cycle in the typing animation. One per line.</p>
+                    </div>
+                    <div className="space-y-2">
+                      {contentDraft.authPageContent?.heroTypingPhrases?.map((phrase, idx) => (
+                        <div key={`phrase-${idx}`} className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder={`Phrase ${idx + 1}`}
+                            value={phrase || ''}
+                            onChange={(e) => updateArrayItem('authPageContent', idx, { ...contentDraft.authPageContent[idx], phrase: e.target.value }, 'heroTypingPhrases')}
+                            className="flex-1 rounded border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeArrayItem('authPageContent', idx, 'heroTypingPhrases')}
+                            className="rounded border border-red-500/25 bg-red-500/10 px-2 py-2 text-xs font-semibold text-red-200 transition hover:bg-red-500/20"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newPhrase = ''
+                        updateRootField('authPageContent', {
+                          ...contentDraft.authPageContent,
+                          heroTypingPhrases: [...(contentDraft.authPageContent?.heroTypingPhrases || []), newPhrase]
+                        })
+                      }}
+                      className="rounded-full border border-cyan-400/25 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/20"
+                    >
+                      Add Phrase
+                    </button>
+                  </div>
+
+                  {/* Auth Impact Stats */}
+                  <div className="space-y-4">
+                    <div className="border-b border-slate-700 pb-3">
+                      <h3 className="text-sm font-semibold text-slate-200">Impact Statistics</h3>
+                      <p className="mt-1 text-xs text-slate-400">Display statistics below the hero text (label + value pairs).</p>
+                    </div>
+                    <div className="space-y-4">
+                      {contentDraft.authPageContent?.authImpactStats?.map((stat, idx) => (
+                        <div key={`stat-${idx}`} className="space-y-2 rounded-lg border border-slate-700/50 bg-slate-950/40 p-3">
+                          <input
+                            type="text"
+                            placeholder="Label (e.g., 'Students Trained')"
+                            value={stat.label || ''}
+                            onChange={(e) => {
+                              const updated = [...contentDraft.authPageContent.authImpactStats]
+                              updated[idx] = { ...updated[idx], label: e.target.value }
+                              updateRootField('authPageContent', {
+                                ...contentDraft.authPageContent,
+                                authImpactStats: updated
+                              })
+                            }}
+                            className="w-full rounded border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Value (e.g., '2000+')"
+                            value={stat.value || ''}
+                            onChange={(e) => {
+                              const updated = [...contentDraft.authPageContent.authImpactStats]
+                              updated[idx] = { ...updated[idx], value: e.target.value }
+                              updateRootField('authPageContent', {
+                                ...contentDraft.authPageContent,
+                                authImpactStats: updated
+                              })
+                            }}
+                            className="w-full rounded border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = contentDraft.authPageContent.authImpactStats.filter((_, i) => i !== idx)
+                              updateRootField('authPageContent', {
+                                ...contentDraft.authPageContent,
+                                authImpactStats: updated
+                              })
+                            }}
+                            className="rounded border border-red-500/25 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-200 transition hover:bg-red-500/20"
+                          >
+                            Remove Stat
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newStat = { label: '', value: '' }
+                        updateRootField('authPageContent', {
+                          ...contentDraft.authPageContent,
+                          authImpactStats: [...(contentDraft.authPageContent?.authImpactStats || []), newStat]
+                        })
+                      }}
+                      className="rounded-full border border-cyan-400/25 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/20"
+                    >
+                      Add Stat
+                    </button>
+                  </div>
+                </div>
               </SectionShell>
             ) : null}
 
