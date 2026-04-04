@@ -20,6 +20,7 @@ const adminTabs = [
   { id: 'placements', label: 'Placements' },
   { id: 'leadership', label: 'Leadership' },
   { id: 'sections', label: 'Sections' },
+  { id: 'faq', label: 'FAQ' },
   { id: 'payments', label: 'Payments' },
   { id: 'users', label: 'Users' },
   { id: 'advanced', label: 'Advanced JSON' },
@@ -64,6 +65,7 @@ const createEmptySearchTarget = () => ({ id: '', keywords: [], label: '' })
 const createEmptyRoadmapStep = () => ({ accent: '', description: '', icon: '', number: '', title: '' })
 const createEmptyBatch = () => ({ duration: '', mode: '', track: '' })
 const createEmptyBlog = () => ({ summary: '', title: '' })
+const createEmptyFaqItem = () => ({ question: '', answer: '' })
 
 const cloneValue = (value) => JSON.parse(JSON.stringify(value))
 const toLines = (items) => items.join('\n')
@@ -623,6 +625,9 @@ function AdminPanel({ onLogout, userEmail }) {
                     <Field label="WhatsApp Number" hint="Numbers only, without spaces or plus sign.">
                       <TextInput value={contentDraft.contact.whatsappNumber} onChange={(event) => updateNestedField('contact', 'whatsappNumber', event.target.value)} />
                     </Field>
+                    <Field label="CITS Instagram URL">
+                      <TextInput value={contentDraft.contact.instagramUrl || ''} onChange={(event) => updateNestedField('contact', 'instagramUrl', event.target.value)} />
+                    </Field>
                     <Field label="Support Hours">
                       <TextInput value={contentDraft.contact.supportHours} onChange={(event) => updateNestedField('contact', 'supportHours', event.target.value)} />
                     </Field>
@@ -1021,6 +1026,47 @@ function AdminPanel({ onLogout, userEmail }) {
                   </button>
                 </SectionShell>
               </>
+            ) : null}
+
+            {activeTab === 'faq' ? (
+              <SectionShell title="FAQ Items" description="Edit frequently asked questions and answers.">
+                <div className="space-y-6">
+                  {siteContent.faqItems?.map((item, idx) => (
+                    <div key={idx} className="space-y-3 rounded-lg border border-slate-700/50 bg-slate-950/40 p-4">
+                      <input
+                        type="text"
+                        placeholder="Question"
+                        value={item.question || ''}
+                        onChange={(e) => updateArrayItem('faqItems', idx, { ...item, question: e.target.value })}
+                        className="w-full rounded border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500"
+                      />
+                      <textarea
+                        placeholder="Answer"
+                        value={item.answer || ''}
+                        onChange={(e) => updateArrayItem('faqItems', idx, { ...item, answer: e.target.value })}
+                        rows="3"
+                        className="w-full rounded border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => removeArrayItem('faqItems', idx)}
+                          className="rounded-full border border-red-500/25 bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-200 transition hover:bg-red-500/20"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => addArrayItem('faqItems', createEmptyFaqItem)}
+                  className="rounded-full border border-cyan-400/25 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/20"
+                >
+                  Add FAQ Item
+                </button>
+              </SectionShell>
             ) : null}
 
             {activeTab === 'payments' ? (

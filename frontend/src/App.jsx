@@ -182,6 +182,7 @@ const _navItems = [
   { label: 'Roadmap', href: '#roadmap' },
   { label: 'Upcoming Batches', href: '#upcoming-batches' },
   { label: 'Verify Your Certificate', href: '#verify-certificate' },
+  { label: 'FAQ', href: '#faq' },
   { label: 'Blogs', href: '#blogs' },
 ]
 
@@ -208,6 +209,7 @@ const _searchTargets = [
   { id: 'roadmap', label: 'Roadmap', keywords: ['roadmap', 'steps', 'enroll', 'enrollment', 'skill development'] },
   { id: 'upcoming-batches', label: 'Upcoming Batches', keywords: ['batch', 'upcoming', 'enrollment'] },
   { id: 'verify-certificate', label: 'Verify Your Certificate', keywords: ['verify', 'certificate', 'validation'] },
+  { id: 'faq', label: 'FAQ', keywords: ['faq', 'questions', 'help', 'support', 'how'] },
   { id: 'blogs', label: 'Blogs', keywords: ['blog', 'insights', 'career'] },
 ]
 
@@ -378,6 +380,17 @@ function App() {
   // Payment modal state
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [selectedCourse, setSelectedCourse] = useState(null)
+  const [isRefundPolicyExpanded, setIsRefundPolicyExpanded] = useState(false)
+  const [expandedFaqItems, setExpandedFaqItems] = useState({})
+
+  // Toggle FAQ item expansion
+  const toggleFaqItem = (index) => {
+    setExpandedFaqItems((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }))
+  }
+
   const [userPurchases, setUserPurchases] = useState({})
   // Current routing keeps auth on /login and /signup, with the protected site on /home.
   // Future production change: expand this route-driven mode if onboarding or member dashboards split out.
@@ -394,6 +407,7 @@ function App() {
     contact,
     courseIncludes: siteCourseIncludes,
     courses: siteCourses,
+    faqItems,
     footer,
     impactStats: siteImpactStats,
     leadershipMembers,
@@ -1527,6 +1541,50 @@ function App() {
           </div>
         </section>
 
+        {/* FAQ Section with Collapsible Items */}
+        <section
+          id="faq"
+          data-reveal
+          className="reveal delay-6 rounded-2xl border border-slate-700/70 bg-slate-900/60 p-6 sm:p-8"
+        >
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">FAQ</p>
+          <h2 className="mt-2 text-2xl font-bold text-white">Frequently Asked Questions</h2>
+          <p className="mt-4 max-w-3xl text-slate-200">
+            Find answers to common questions about our courses, enrollment, and services.
+          </p>
+
+          <div className="mt-8 space-y-4">
+            {faqItems.map((item, index) => (
+              <button
+                key={index}
+                onClick={() => toggleFaqItem(index)}
+                className={`w-full rounded-xl border px-6 py-4 text-left transition-all duration-200 ${
+                  expandedFaqItems[index]
+                    ? 'border-cyan-400/60 bg-cyan-950/30 shadow-lg shadow-cyan-950/20'
+                    : 'border-slate-700/70 bg-slate-950/40 hover:border-slate-600/80'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <h3 className="text-base font-semibold text-white">{item.question}</h3>
+                  <span
+                    className={`shrink-0 text-xl text-cyan-300 transition-transform duration-300 ${
+                      expandedFaqItems[index] ? 'rotate-180' : ''
+                    }`}
+                  >
+                    ▼
+                  </span>
+                </div>
+
+                {expandedFaqItems[index] && (
+                  <p className="mt-4 animate-in fade-in slide-in-from-top-2 text-sm leading-6 text-slate-300">
+                    {item.answer}
+                  </p>
+                )}
+              </button>
+            ))}
+          </div>
+        </section>
+
         {/* Footer consolidates contact details, quick links, and the brand message. */}
         <footer
           data-reveal
@@ -1615,6 +1673,19 @@ function App() {
                     <InstagramIcon className="h-5 w-5" />
                   </a>
                 </p>
+                <p className="flex items-center gap-3">
+                  <span>CITS Insta:</span>
+                  <a
+                    className="inline-flex items-center rounded-full border border-cyan-400/40 bg-cyan-500/10 p-2 text-cyan-200 transition hover:bg-cyan-500/20"
+                    href={contact.instagramUrl || 'https://www.instagram.com/connectints?igsh=b2xxNWp3djVxYm9o'}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="CITS Instagram"
+                    title="CITS Instagram"
+                  >
+                    <InstagramIcon className="h-5 w-5" />
+                  </a>
+                </p>
                 <p>{supportHours}</p>
                 <p>{footer.responseTimeNote}</p>
               </div>
@@ -1626,6 +1697,59 @@ function App() {
               >
                 Chat on WhatsApp
               </a>
+            </div>
+          </div>
+
+          {/* Refund Policy Section - Collapsible Dropdown */}
+          <div className="mt-8 border-t border-slate-700/70 pt-8">
+            <div className="max-w-4xl">
+              <button
+                onClick={() => setIsRefundPolicyExpanded(!isRefundPolicyExpanded)}
+                className="flex items-center gap-2 transition-all duration-200 hover:opacity-80"
+              >
+                <h3 className="text-lg font-bold uppercase tracking-[0.18em] text-cyan-300">
+                  Returns and Refunds Policy
+                </h3>
+                <span className={`text-xl text-cyan-300 transition-transform duration-300 ${
+                  isRefundPolicyExpanded ? 'rotate-180' : ''
+                }`}>
+                  ▼
+                </span>
+              </button>
+
+              {isRefundPolicyExpanded && (
+                <div className="animate-in fade-in slide-in-from-top-2 mt-4 space-y-4 text-sm text-slate-300 leading-relaxed">
+                  <p className="font-semibold">
+                    Thank you for Choosing CITS
+                  </p>
+
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-semibold text-cyan-200 mb-2">Non-tangible irrevocable goods ("Digital products")</h4>
+                      <p>
+                        We do not issue refunds for non-tangible irrevocable goods ("digital products") once the order is confirmed and the product is sent. In case of refundable you will get in 5 - 7 working days which CITS will confirm in your course.
+                      </p>
+                    </div>
+
+                    <p>
+                      We recommend contacting us for assistance if you experience any issues receiving or downloading our products.
+                    </p>
+
+                    <div>
+                      <h4 className="font-semibold text-cyan-200 mb-2">Contact us for any issues:</h4>
+                      <p>
+                        If you have any questions about our Returns and Refunds Policy, please contact us:
+                      </p>
+                      <p className="mt-2">
+                        By email:{' '}
+                        <a className="font-semibold text-cyan-200 hover:underline" href="mailto:connectints1@gmail.com">
+                          connectints1@gmail.com
+                        </a>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

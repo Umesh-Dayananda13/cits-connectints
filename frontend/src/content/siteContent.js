@@ -63,6 +63,29 @@ const defaultBlogPreviews = [
   },
 ]
 
+const defaultFaqItems = [
+  {
+    question: 'How can I join a demo session?',
+    answer: 'You can join a demo session by visiting our "Upcoming Batches" section and selecting a course. Click on the course to view available demo session dates and register for one that suits your schedule.',
+  },
+  {
+    question: 'Why should I choose CITS over others?',
+    answer: 'We\'re not just a training company – we\'re a community. With 100,000+ learners, regional support, bilingual delivery, real-time projects, and top trainer mentorship, we bridge the gap between education and employability in a truly personalized way.',
+  },
+  {
+    question: 'What payment methods do you accept?',
+    answer: 'We accept various payment methods including credit cards, debit cards, e-wallets, and bank transfers. All transactions are secure and encrypted for your protection.',
+  },
+  {
+    question: 'Do you offer placement support?',
+    answer: 'Yes, we offer comprehensive placement support including interview preparation, resume review, and job referrals to our partner companies.',
+  },
+  {
+    question: 'Can I verify my certificate online?',
+    answer: 'Absolutely! Once you complete your course, you can verify your certificate through our online certificate verification tool on the "Verify Your Certificate" page.',
+  },
+]
+
 const defaultRoadmapSteps = [
   {
     number: '1',
@@ -159,6 +182,7 @@ const defaultContact = {
   phone: '+91 6303545755',
   alternatePhone: '+91 8247097984',
   supportHours: 'Mon-Sat | 9:00 AM to 7:00 PM',
+  instagramUrl: 'https://www.instagram.com/connectints?igsh=b2xxNWp3djVxYm9o',
 }
 
 const defaultAbout = {
@@ -232,6 +256,7 @@ export const defaultSiteContent = {
   contact: defaultContact,
   courseIncludes: defaultCourseIncludes,
   courses: defaultCourses,
+  faqItems: defaultFaqItems,
   footer: defaultFooter,
   impactStats: defaultImpactStats,
   leadershipMembers: defaultLeadershipMembers,
@@ -261,6 +286,7 @@ export const mergeSiteContent = (remoteContent = {}) => ({
     : defaultSiteContent.contact,
   courseIncludes: pickArray(remoteContent.courseIncludes, defaultSiteContent.courseIncludes),
   courses: pickArray(remoteContent.courses, defaultSiteContent.courses),
+  faqItems: pickArray(remoteContent.faqItems, defaultSiteContent.faqItems),
   footer: isPlainObject(remoteContent.footer)
     ? { ...defaultSiteContent.footer, ...remoteContent.footer }
     : defaultSiteContent.footer,
