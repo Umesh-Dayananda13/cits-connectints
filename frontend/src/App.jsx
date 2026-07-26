@@ -712,7 +712,7 @@ function App() {
     try {
       await sendPasswordResetEmail(auth, email)
       setAuthMessage(
-        'Password reset email sent! Check your inbox for instructions to reset your password.',
+        'Password reset email sent! Check your inbox or spam folder for instructions to reset your password.',
       )
       setResetEmail('')
       // Redirect back to signin after a short delay

@@ -7,7 +7,8 @@ service cloud.firestore {
     function isVerifiedAdmin() {
       return request.auth != null
         && request.auth.token.email in [
-          'csk07@gmail.com'
+          'csk07@gmail.com',
+          'tharunsparkss@gmail.com'
         ];
     }
 
